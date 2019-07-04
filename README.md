@@ -1,4 +1,6 @@
 # Federated learning - Data Owner
+[![Build Status](https://travis-ci.com/DeltaML/data-owner.svg?branch=master)](https://travis-ci.com/DeltaML/data-owner)
+[![Coverage Status](https://coveralls.io/repos/github/DeltaML/data-owner/badge.svg?branch=master)](https://coveralls.io/github/DeltaML/data-owner?branch=master)
 Participant in Federated Learning scheme that can take the role of training a local instance of model or calculate the error of the federated model using local data.
 
 ## Getting Started
