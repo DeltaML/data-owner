@@ -25,7 +25,7 @@ dictConfig({
 
 def create_app():
     # create and configure the app
-    flask_app = Flask(__name__, static_folder='ui/build/')
+    flask_app = Flask(__name__)
     # load the instance config
     flask_app.config.from_pyfile('config.py')
     # ensure the instance folder exists
@@ -41,16 +41,6 @@ app = create_app()
 data_loader = DataLoader(app.config["DATASETS_DIR"])
 data_owner = DataOwnerFactory.create_data_owner(app.config, data_loader)
 active_encryption = app.config["ACTIVE_ENCRYPTION"]
-
-
-# Serve React App
-@app.route('/', defaults={'path': ''})
-@app.route('/<path:path>')
-def serve(path):
-    if path != "" and os.path.exists(app.static_folder + path):
-        return send_from_directory(app.static_folder, path)
-    else:
-        return send_from_directory(app.static_folder, 'index.html')
 
 
 @app.route('/dataset', methods=['POST'])
@@ -137,9 +127,3 @@ def get_model_quality():
     weights = data["model"]
     logging.info("Getting metrics, data owner: {}".format(data_owner.client_id))
     return jsonify(data_owner.model_quality_metrics(model_type, weights))
-
-
-
-
-
-
