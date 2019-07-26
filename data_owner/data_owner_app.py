@@ -5,6 +5,10 @@ from flask import Flask, request, jsonify
 from data_owner.service.data_owner import DataOwnerFactory
 from commons.data.data_loader import DataLoader
 
+
+from data_owner.config.logging_config import DEV_LOGGING_CONFIG, PROD_LOGGING_CONFIG
+
+
 from flask import send_from_directory
 dictConfig({
     'version': 1,
@@ -25,15 +29,21 @@ dictConfig({
 
 def create_app():
     # create and configure the app
-    flask_app = Flask(__name__, static_folder='ui/build/')
-    # load the instance config
-    flask_app.config.from_pyfile('config.py')
+    flask_app = Flask(__name__)
+    if 'ENV_PROD' in os.environ and os.environ['ENV_PROD']:
+        flask_app.config.from_pyfile("config/prod/app_config.py")
+        dictConfig(PROD_LOGGING_CONFIG)
+    else:
+        dictConfig(DEV_LOGGING_CONFIG)
+        flask_app.config.from_pyfile("config/dev/app_config.py")
     # ensure the instance folder exists
     try:
         os.makedirs(flask_app.instance_path)
     except OSError:
         pass
+
     return flask_app
+
 
 
 # Global variables
@@ -41,16 +51,6 @@ app = create_app()
 data_loader = DataLoader(app.config["DATASETS_DIR"])
 data_owner = DataOwnerFactory.create_data_owner(app.config, data_loader)
 active_encryption = app.config["ACTIVE_ENCRYPTION"]
-
-
-# Serve React App
-@app.route('/', defaults={'path': ''})
-@app.route('/<path:path>')
-def serve(path):
-    if path != "" and os.path.exists(app.static_folder + path):
-        return send_from_directory(app.static_folder, path)
-    else:
-        return send_from_directory(app.static_folder, 'index.html')
 
 
 @app.route('/dataset', methods=['POST'])
@@ -137,9 +137,3 @@ def get_model_quality():
     weights = data["model"]
     logging.info("Getting metrics, data owner: {}".format(data_owner.client_id))
     return jsonify(data_owner.model_quality_metrics(model_type, weights))
-
-
-
-
-
-
