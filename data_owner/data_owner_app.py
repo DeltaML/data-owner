@@ -125,7 +125,7 @@ def ping():
 def link_reqs_to_file():
     data = request.get_json()
     training_req_id = data['model_id']
-    reqs = json.loads(data['requirements'])
+    reqs = data['requirements']
     result = data_owner.link_dataset_to_model_id(training_req_id, reqs)
     return jsonify({training_req_id: (data_owner.client_id, result)})
 
