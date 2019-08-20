@@ -5,6 +5,10 @@ import numpy as np
 
 class LinearRegression(DeltaModel):
     """Runs linear regression with local data or by gradient steps, where gradient can be passed in."""
+    def __init__(self, X=None, y=None, requirements=None, weights=None):
+        self.type = "LINEAR_REGRESSION"
+        super().__init__(X, y, self.type, requirements, weights)
+
 
     def fit(self, n_iter, eta=0.01):
         """Linear regression for n_iter"""

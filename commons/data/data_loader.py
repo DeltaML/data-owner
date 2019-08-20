@@ -1,17 +1,23 @@
 import logging
-
+import uuid
 import numpy as np
 from sklearn.datasets import load_diabetes
 import pandas as pd
 import os
 
+from commons.utils.singleton import Singleton
+from data_owner.models.dataset import Dataset
 
-class DataLoader:
 
-    def __init__(self, dataset_path):
+class DataLoader(metaclass=Singleton):
+
+    def __init__(self):
         self.X, self.y, self.X_test, self.y_test = None, None, None, None
         self.seed = 43
         np.random.seed(self.seed)
+        self.dataset_path = None
+
+    def init(self, dataset_path):
         self.dataset_path = dataset_path
 
     def load_data(self, filename):
@@ -104,6 +110,8 @@ class DataLoader:
         :return: the name of the file that complies with the requested requirements.
         """
         files = [fname for fname in os.listdir(self.dataset_path)]
+        print(requeriments['features'])
+        print(requeriments['features']['list'])
         features = list(map(lambda x: x.lower(), requeriments['features']['list']))
         feat_range = requeriments['features']['range']
         target_range = requeriments['target']['range']
@@ -128,3 +136,21 @@ class DataLoader:
                 print(e)
                 continue
             return file
+
+    def get_dataset_metadata(self, filename):
+        try:
+            dataset = pd.read_csv("{}/{}".format(self.dataset_path, filename), sep="\t")
+            columns = dataset.columns.tolist()
+            feature_values = dataset[columns[:-1]]
+            target_values = dataset[columns[-1]]
+            lowercase_cols = list(map(lambda x: x.lower(), columns[:-1]))
+            Dataset(str(uuid.uuid1()),
+                    filename,
+                    lowercase_cols,
+                    feature_values.max(),
+                    feature_values.min(),
+                    target_values.max(),
+                    target_values.min())
+        except Exception as e:
+            print(e)
+            return None
