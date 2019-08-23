@@ -50,6 +50,32 @@ metric = api.model(name='Metric', model={
     'mse': fields.Float(required=True, description='The model mse')
 })
 
+features = api.model(name='Features', model={
+    'list': fields.List(fields.String, required=True, description='The model type'),
+    'range': fields.List(fields.Integer, required=True, description='The model type'),
+    'pre_processing': fields.List(fields.Raw, required=False, description='The model type'),
+    'desc': fields.Raw(required=False, description='The model type')
+})
+
+target = api.model(name='Target', model={
+    'range': fields.List(fields.Integer, required=True, description='The model type'),
+    'desc': fields.List(fields.String, required=True, description='The model type')
+})
+
+data_requirements = api.model(name='Data Requirements', model={
+    'features': fields.Nested(features, required=True, description='The model type'),
+    'target': fields.Nested(target, required=True, description='The model type'),
+})
+
+data_metadata = api.model(name='Requirements', model={
+    'data_requirements': fields.Nested(data_requirements, required=True, description='Data requirements'),
+    'status': fields.String(required=True, description='The model training status'),
+    'model_id': fields.String(required=True, description='The model id'),
+    'model_type': fields.String(required=True, description='The model type'),
+    'model_buyer_id': fields.String(required=True, description='The model buyer id'),
+    'weights': fields.List(fields.Raw, required=True, description='The model weights')
+})
+
 data_owner = DataOwnerService()
 
 
@@ -57,10 +83,12 @@ data_owner = DataOwnerService()
 class TrainingResources(Resource):
 
     @api.doc('Initialize new model with existing dataset')
+    @api.expect(data_metadata)
     @api.marshal_with(link, code=201)
     def post(self):
         data = request.get_json()
         training_id = data['model_id']
+        import json
         reqs = data['requirements']
         # TODO: For now i'm creating the training and linking the dataset to the training all at once
         # TODO: and doing it in the back, but a future change will be to do those in separate API calls.
