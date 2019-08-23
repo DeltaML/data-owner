@@ -1,12 +1,8 @@
 import logging
-import json
+
 from flask_restplus import Resource, Namespace, fields
 from flask import request
-from commons.model.model_service import ModelFactory
 from data_owner.services.data_owner_service import DataOwnerService
-from data_owner.models.model import Model
-from data_owner.models.dataset import Dataset
-from commons.data.data_loader import DataLoader
 
 api = Namespace('trainings', description='Training related operations')
 
@@ -50,13 +46,17 @@ link = api.model(name='Link', model={
     'has_dataset': fields.Boolean(required=True, description='The model weights')
 })
 
+metric = api.model(name='Metric', model={
+    'mse': fields.Float(required=True, description='The model mse')
+})
+
 data_owner = DataOwnerService()
 
 
 @api.route('', endpoint='training_resources_ep')
 class TrainingResources(Resource):
 
-    @api.doc('Create new user')
+    @api.doc('Initialize new model with existing dataset')
     @api.marshal_with(link, code=201)
     def post(self):
         data = request.get_json()
@@ -64,13 +64,8 @@ class TrainingResources(Resource):
         reqs = data['requirements']
         # TODO: For now i'm creating the training and linking the dataset to the training all at once
         # TODO: and doing it in the back, but a future change will be to do those in separate API calls.
-        filename = DataLoader().get_dataset_for_training(reqs)
-        if filename is not None:
-            DataLoader().load_data(filename)
-            dataset = DataLoader().get_sub_set()
-            model = Model(training_id, data['model_type'], dataset)
-            model.save()
-        return {'model_id': training_id, 'data_owner_id': DataOwnerService().get_id(), 'has_dataset': filename is not None}
+        model_id, do_id, has_dataset = data_owner.link_model_to_dataset(training_id, data['model_type'], reqs)
+        return {'model_id': model_id, 'data_owner_id': do_id, 'has_dataset': has_dataset}
 
 
 @api.route('/<model_id>', endpoint='training_resource_ep')
@@ -85,12 +80,8 @@ class TrainingResource(Resource):
         """
         logging.info('Process weights')
         data = request.get_json()
-        model_orm = Model.get(model_id)
-        print(data['weights'])
-        model, response = data_owner.process(model_orm.model, data['weights'])
-        model_orm.model = model
-        model_orm.update()
-        return {'data_owner_id': data_owner.get_id(), 'update': response}
+        gradients = data_owner.process(model_id, data['weights'])
+        return {'data_owner_id': data_owner.get_id(), 'update': gradients}
 
     @api.doc('Update local model with gradient')
     def put(self, model_id):
@@ -100,28 +91,18 @@ class TrainingResource(Resource):
         """
         data = request.get_json()
         logging.info('Gradient step')
-        model_orm = Model.get(model_id)
-        data_owner.step(model_orm.model, data['gradient'])
-        model_orm.update()
+        data_owner.step(model_id, data['gradient'])
         return 200
 
 
-#@api.route('/<model_id>', endpoint='training_ep')
-#@api.response(404, 'Training not found')
-#@api.param('model_id', 'The model identifier')
-#class TrainingResource(Resource):
+@api.route('/<model_id>/metrics', endpoint='metrics_resource_ep')
+class MetricsResource(Resource):
 
-#    @api.doc('put_model')
-#    #@api.marshal_with(updated_model)
-#    def put(self, model_id):
-#        data = request.get_json()
-#        training_id = data['model_id']
-#        reqs = data['requirements']
-
-#    @api.doc('patch_model')
-#    #@api.marshal_with(updated_model)
-#    def patch(self, model_id):
-#        data = request.get_json()
-#        logging.info('Received update from fed. aggr. {}'.format(data))
-#        DataOwnerService().update_model(model_id, data)
-#        return 200
+    @api.doc('Generate a new metric that measures the quality of a model')
+    @api.marshal_with(metric, code=201)
+    def post(self, model_id):
+        data = request.get_json()
+        model_type = data["model_type"]
+        weights = data["model"]
+        mse = data_owner.model_quality_metrics(model_id, model_type, weights)
+        return {'mse': mse}

@@ -5,6 +5,10 @@ import numpy as np
 
 from commons.decorators.decorators import optimized_collection_parameter
 from commons.utils.singleton import Singleton
+from commons.data.data_loader import DataLoader
+from commons.model.model_service import ModelFactory
+from data_owner.domain.data_owner import DataOwner
+from data_owner.models.model import Model
 from data_owner.services.federated_trainer_connector import FederatedTrainerConnector
 
 
@@ -30,7 +34,7 @@ class DataOwnerService(metaclass=Singleton):
             self.register()
 
     @optimized_collection_parameter(optimization=np.asarray, active=True)
-    def process(self, model, weights):
+    def process(self, model_id, weights):
         """
         Process to run model
         :param model_type:
@@ -38,9 +42,12 @@ class DataOwnerService(metaclass=Singleton):
         :return:
         """
         logging.info("Initializing local model")
-        model.set_weights(weights)
-        gradient = model.compute_gradient()
-        return model, gradient.tolist()
+        model_orm = Model.get(model_id)
+        model_orm.set_weights(weights)
+        model, gradient = DataOwner().calculate_gradient(model_orm.model)
+        model_orm.model = model
+        model_orm.update()
+        return gradient
 
     def register(self):
         """
@@ -54,24 +61,44 @@ class DataOwnerService(metaclass=Singleton):
         return self.client_id
 
     @optimized_collection_parameter(optimization=np.asarray, active=True)
-    def step(self, model, step_data):
+    def step(self, model_id, step_data):
         """
-        :param encrypted_model:
+        :param model:
+        :param step_data:
         :return:
         """
-        model.gradient_step(step_data, float(self.config['ETA']))
+        model_orm = Model.get(model_id)
+        model = DataOwner().step(model_orm.model, step_data, float(self.config['ETA']))
+        model_orm.update()
         logging.info("Model current weights {}".format(model.weights.tolist()))
         return model
 
-    def model_quality_metrics(self, model, X_test, y_test):
+    def model_quality_metrics(self, model_id, model_type, weights):
         """
         Method used only by validator role. It doesn't use the model built from the data. It gets the model from
         the federated trainer and use the local data to calculate quality metrics
         :return: the model quality (currently measured with the MSE)
         """
-        mse = model.predict(X_test, y_test).mse
+        data_owner = DataOwner()
+        logging.info("Getting metrics, data owner: {}".format(self.client_id))
+        X_test, y_test = DataLoader().get_sub_set()
+        model_orm = Model.get(model_id) or ModelFactory.get_model(model_type)()
+        model = model_orm.model
+        model.set_weights(np.asarray(weights))
+        mse = data_owner.model_quality_metrics(model, X_test, y_test)
+        model_orm.add_mse(mse)
+        model_orm.update()
         logging.info("Calculated mse: {}".format(mse))
         return mse
+
+    def link_model_to_dataset(self, model_id, model_type, reqs):
+        filename = DataLoader().get_dataset_for_training(reqs)
+        if filename is not None:
+            DataLoader().load_data(filename)
+            dataset = DataLoader().get_sub_set()
+            model = Model(model_id, model_type, dataset)
+            model.save()
+        return model_id, self.get_id(), filename is not None
 
 
 class DataOwnerFactory:

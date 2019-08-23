@@ -56,21 +56,6 @@ data_owner_service.init(app.config)
 active_encryption = app.config["ACTIVE_ENCRYPTION"]
 
 
-@app.errorhandler(Exception)
-def handle_error(error):
-    message = [str(x) for x in error.args]
-    status_code = error.status_code
-    success = False
-    response = {
-        'success': success,
-        'error': {
-            'type': error.__class__.__name__,
-            'message': message
-        }
-    }
-    return jsonify(response), status_code
-
-
 @app.route('/ping', methods=['GET'])
 def ping():
     return jsonify(200)

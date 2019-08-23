@@ -110,8 +110,6 @@ class DataLoader(metaclass=Singleton):
         :return: the name of the file that complies with the requested requirements.
         """
         files = [fname for fname in os.listdir(self.dataset_path)]
-        print(requeriments['features'])
-        print(requeriments['features']['list'])
         features = list(map(lambda x: x.lower(), requeriments['features']['list']))
         feat_range = requeriments['features']['range']
         target_range = requeriments['target']['range']

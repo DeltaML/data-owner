@@ -64,9 +64,9 @@ class Model(DbEntity):
     mse_history = Column(JSON)
     creation_date = Column(DateTime, nullable=False, default=datetime.utcnow)
     updated_date = Column(DateTime, nullable=False, default=datetime.utcnow)
-    #user_id = Column(Integer, ForeignKey('users.id'))
-    #user = relationship("User", back_populates="models")
-    #User.models = relationship("Model", back_populates="user")
+    user_id = Column(Integer, ForeignKey('users.id'))
+    user = relationship("User", back_populates="models")
+    User.models = relationship("Model", back_populates="user")
 
     def __init__(self, model_id, model_type, data, name="default"):
         self.id = model_id

@@ -5,4 +5,4 @@ REGISTRATION_ENABLE = True
 ACTIVE_ENCRYPTION = False
 DATASETS_DIR = "./dataset"
 KEY_LENGTH = 1024
-DB_ENGINE = 'sqlite:////app/db/model_buyer.db'
+DB_ENGINE = 'sqlite:////app/db/data_owner.db'

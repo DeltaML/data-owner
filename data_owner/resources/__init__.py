@@ -5,7 +5,7 @@ from flask_restplus import Api
 from data_owner.exceptions.exceptions import NoResultFoundException, LoginFailureException
 from data_owner.resources.trainings_resource import api as trainings_api
 from data_owner.resources.datasets_resource import api as datasets_api
-from data_owner.resources.metrics_resource import api as metrics_api
+from data_owner.resources.models_resource import api as models_api
 
 api = Api(
     title='Data Owner Api',
@@ -17,7 +17,7 @@ api = Api(
 # Add apis to namespace
 api.add_namespace(trainings_api)
 api.add_namespace(datasets_api)
-api.add_namespace(metrics_api)
+api.add_namespace(models_api)
 
 
 @api.errorhandler(LoginFailureException)
@@ -28,7 +28,7 @@ def login_failure_handler(error):
     :return:
     """
     logging.error(error)
-    return {'message': str(error)}, 400
+    return _handle_error(error)
 
 
 @api.errorhandler(NoResultFoundException)
@@ -39,7 +39,7 @@ def not_found_error_handler(error):
     :return:
     """
     logging.error(error)
-    return {'message': str(error)}, 404
+    return _handle_error(error)
 
 
 @api.errorhandler(NoResultFoundException)
@@ -50,7 +50,7 @@ def dataset_not_found_error_handler(error):
     :return:
     """
     logging.error(error)
-    return {'message': str(error)}, 404
+    return _handle_error(error)
 
 
 @api.errorhandler(Exception)
