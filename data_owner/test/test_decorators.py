@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import MagicMock
 import json
 
-from data_owner.service.decorators import serialize_encrypted_data, serialize_encrypted_model_data, \
+from data_owner.services.decorators import serialize_encrypted_data, serialize_encrypted_model_data, \
     serialize_encrypted_model_data
 
 

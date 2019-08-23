@@ -5,3 +5,4 @@ REGISTRATION_ENABLE = True
 ACTIVE_ENCRYPTION = False
 DATASETS_DIR = "./dataset"
 KEY_LENGTH = 1024
+DB_ENGINE = 'sqlite:///data_owner.db'

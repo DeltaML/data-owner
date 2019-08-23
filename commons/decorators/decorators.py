@@ -1,7 +1,8 @@
 def optimized_collection_parameter(optimization, active=False):
     def wrap(f):
         def wrapped_optimized_collection_parameter(*args):
-            params = args[0], optimization(args[1]) if active else args[1]
+            collection = optimization(args[2]) if active else args[2]
+            params = args[0], args[1], collection
             return f(*params)
         return wrapped_optimized_collection_parameter
     return wrap
