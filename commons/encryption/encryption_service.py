@@ -3,12 +3,13 @@ from commons.encryption.config import ENCRYPTION_TYPE
 
 class EncryptionService:
 
-    def __init__(self, homomorphic_encryption=ENCRYPTION_TYPE):
+    def __init__(self, homomorphic_encryption=ENCRYPTION_TYPE, is_active=False):
         """
 
         :param homomorphic_encryption:
         """
         self.homomorphic_encryption = homomorphic_encryption()
+        self.is_active = is_active
         self.public_key, self.private_key = None, None
 
     def generate_key_pair(self, key_length):
@@ -63,7 +64,8 @@ class EncryptionService:
         return self.homomorphic_encryption.decrypt_collection(pk, collection)
 
     def decrypt_and_deserizalize_collection(self, private_key, collection):
-        return [self.homomorphic_encryption.decrypt_value(private_key, n) for n in self.get_deserialized_collection(collection)]
+        return [self.homomorphic_encryption.decrypt_value(private_key, n) for n in
+                self.get_deserialized_collection(collection)]
 
     def get_serialized_encrypted_collection(self, collection):
         """

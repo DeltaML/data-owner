@@ -1,7 +1,10 @@
 import os
+import logging
 from logging.config import dictConfig
 from flask import Flask, jsonify
 from flask_cors import CORS
+
+from commons.encryption.encryption_service import EncryptionService
 from data_owner.resources import api
 from data_owner.services.data_owner_service import DataOwnerService
 from commons.data.data_loader import DataLoader
@@ -48,12 +51,15 @@ app = create_app()
 api.init_app(app)
 
 CORS(app)
+logging.info("Data owner is running")
+
+encryption_service = EncryptionService(is_active=app.config["ACTIVE_ENCRYPTION"])
+
 data_base = Database(app.config)
 data_loader = DataLoader()
 data_loader.init(app.config["DATASETS_DIR"])
 data_owner_service = DataOwnerService()
-data_owner_service.init(app.config)
-active_encryption = app.config["ACTIVE_ENCRYPTION"]
+data_owner_service.init(app.config, encryption_service)
 
 
 @app.route('/ping', methods=['GET'])

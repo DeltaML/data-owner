@@ -3,10 +3,10 @@ import uuid
 
 import numpy as np
 
-from commons.decorators.decorators import optimized_collection_parameter
-from commons.utils.singleton import Singleton
 from commons.data.data_loader import DataLoader
+from commons.decorators.decorators import optimized_collection_parameter
 from commons.model.model_service import ModelFactory
+from commons.utils.singleton import Singleton
 from data_owner.domain.data_owner import DataOwner
 from data_owner.models.model import Model
 from data_owner.services.federated_trainer_connector import FederatedTrainerConnector
@@ -20,8 +20,9 @@ class DataOwnerService(metaclass=Singleton):
         self.config = None
         self.data_loader = None
         self.federated_trainer_connector = None
+        self.encryption_service = None
 
-    def init(self, config):
+    def init(self, config, encryption_service=None):
         """
         :param config:
         :param data_loader:
@@ -29,6 +30,7 @@ class DataOwnerService(metaclass=Singleton):
         """
         self.client_id = str(uuid.uuid1())
         self.config = config
+        self.encryption_service = encryption_service
         self.federated_trainer_connector = FederatedTrainerConnector(self.config)
         if config['REGISTRATION_ENABLE']:
             self.register()
@@ -73,7 +75,7 @@ class DataOwnerService(metaclass=Singleton):
         logging.info("Model current weights {}".format(model.weights.tolist()))
         return model
 
-    def model_quality_metrics(self, model_id, model_type, weights):
+    def model_quality_metrics(self, model_id, model_type, weights, public_key):
         """
         Method used only by validator role. It doesn't use the model built from the data. It gets the model from
         the federated trainer and use the local data to calculate quality metrics
@@ -84,12 +86,19 @@ class DataOwnerService(metaclass=Singleton):
         X_test, y_test = DataLoader().get_sub_set()
         model_orm = Model.get(model_id) or ModelFactory.get_model(model_type)()
         model = model_orm.model
-        model.set_weights(np.asarray(weights))
+        model_weights = self._get_model_weights(weights, public_key)
+        model.set_weights(model_weights)
         mse = data_owner.model_quality_metrics(model, X_test, y_test)
         model_orm.add_mse(mse)
         model_orm.update()
         logging.info("Calculated mse: {}".format(mse))
         return mse
+
+    def _get_model_weights(self, rq_weights, public_key):
+        self.encryption_service.set_public_key(public_key)
+        weights = rq_weights if not self.encryption_service.is_active else self.encryption_service.get_deserialized_collection(
+            rq_weights)
+        return np.asarray(weights)
 
     def link_model_to_dataset(self, model_id, model_type, reqs):
         filename = DataLoader().get_dataset_for_training(reqs)

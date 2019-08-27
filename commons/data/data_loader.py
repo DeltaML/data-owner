@@ -6,7 +6,25 @@ import pandas as pd
 import os
 
 from commons.utils.singleton import Singleton
-from data_owner.models.dataset import Dataset
+
+
+class Metadata:
+    id = None
+    filename = None
+    features = None
+    features_min = None
+    features_max = None
+    target_min = None
+    target_max = None
+
+    def __init__(self, filename, features, feature_values, target_values):
+        self.id = str(uuid.uuid1())
+        self.filename = filename,
+        self.features = features,
+        self.features_min = feature_values.min(),
+        self.features_max = feature_values.max(),
+        self.target_min = target_values.min(),
+        self.target_max = target_values.max(),
 
 
 class DataLoader(metaclass=Singleton):
@@ -142,13 +160,10 @@ class DataLoader(metaclass=Singleton):
             feature_values = dataset[columns[:-1]]
             target_values = dataset[columns[-1]]
             lowercase_cols = list(map(lambda x: x.lower(), columns[:-1]))
-            Dataset(str(uuid.uuid1()),
-                    filename,
-                    lowercase_cols,
-                    feature_values.max(),
-                    feature_values.min(),
-                    target_values.max(),
-                    target_values.min())
+            return Metadata(filename=filename,
+                            features=lowercase_cols,
+                            feature_values=feature_values,
+                            target_values=target_values)
         except Exception as e:
             print(e)
             return None
