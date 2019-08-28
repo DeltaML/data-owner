@@ -88,7 +88,6 @@ class TrainingResources(Resource):
     def post(self):
         data = request.get_json()
         training_id = data['model_id']
-        import json
         reqs = data['requirements']
         # TODO: For now i'm creating the training and linking the dataset to the training all at once
         # TODO: and doing it in the back, but a future change will be to do those in separate API calls.
@@ -132,5 +131,6 @@ class MetricsResource(Resource):
         data = request.get_json()
         model_type = data["model_type"]
         weights = data["model"]
-        mse = data_owner.model_quality_metrics(model_id, model_type, weights)
+        public_key = data["public_key"]
+        mse = data_owner.model_quality_metrics(model_id, model_type, weights, public_key)
         return {'mse': mse}

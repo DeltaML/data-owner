@@ -5,9 +5,7 @@ from flask import request
 from flask_restplus import Resource, Namespace, fields
 
 from commons.data.data_loader import DataLoader
-from data_owner.services.data_owner_service import DataOwnerService
 from data_owner.models.dataset import Dataset
-
 
 api = Namespace('datasets', description='Datasets related operations')
 
@@ -23,7 +21,8 @@ dataset_overview = api.model(name='DatasetOverview', model={
 })
 
 datasets = api.model(name="Datasets", model={
-    'datasets': fields.List(fields.Nested(dataset_overview), required=True, description='The datasets that the data owner has uploaded')
+    'datasets': fields.List(fields.Nested(dataset_overview), required=True,
+                            description='The datasets that the data owner has uploaded')
 })
 
 
@@ -35,7 +34,14 @@ class DatasetResources(Resource):
         filename = request.files.get('filename') or file.filename
         logging.info(file)
         file.save('./dataset/{}'.format(filename))
-        DataLoader().get_dataset_metadata(filename).save()
+        metadata = DataLoader().get_dataset_metadata(filename)
+        Dataset(metadata.id,
+                filename,
+                metadata.lowercase_cols,
+                metadata.metadatafeature_values.max(),
+                metadata.feature_values.min(),
+                metadata.target_values.max(),
+                metadata.target_values.min()).save()
         file.close()
 
     @api.doc('Create new user')
