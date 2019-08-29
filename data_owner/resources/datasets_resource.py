@@ -1,11 +1,10 @@
 import logging
-from threading import Thread
 
 from flask import request
 from flask_restplus import Resource, Namespace, fields
 
-from commons.data.data_loader import DataLoader
 from data_owner.models.dataset import Dataset
+from data_owner.services.datasets_service import DatasetsService
 
 api = Namespace('datasets', description='Datasets related operations')
 
@@ -29,25 +28,12 @@ datasets = api.model(name="Datasets", model={
 @api.route('', endpoint='datasets_resources_ep')
 class DatasetResources(Resource):
 
-    @staticmethod
-    def __save_dataset(file):
-        filename = request.files.get('filename') or file.filename
-        logging.info(file)
-        file.save('./dataset/{}'.format(filename))
-        metadata = DataLoader().get_dataset_metadata(filename)
-        Dataset(metadata.id,
-                filename,
-                metadata.lowercase_cols,
-                metadata.metadatafeature_values.max(),
-                metadata.feature_values.min(),
-                metadata.target_values.max(),
-                metadata.target_values.min()).save()
-        file.close()
-
-    @api.doc('Create new user')
+    @api.doc('Save new  Dataset')
     def post(self):
         file = request.files.get('file')
-        Thread(target=self.__save_dataset, args={'file': file}).start()
+        DatasetsService.validate(file)
+        logging.info("File received {}".format(file.filename))
+        DatasetsService.save(file)
         return 200
 
     @api.marshal_list_with(datasets)
