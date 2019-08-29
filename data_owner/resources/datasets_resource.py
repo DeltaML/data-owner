@@ -15,13 +15,10 @@ dataset_data = api.model(name='Dataset', model={
 })
 
 dataset_overview = api.model(name='DatasetOverview', model={
+    'id': fields.String(required=True, description='The id of the file of the dataset'),
+    'external_id': fields.String(required=True, description='The external id of the file of the dataset'),
     'filename': fields.String(required=True, description='The name of the file of the dataset'),
     'features': fields.String(required=True, description='The features that the dataset has.')
-})
-
-datasets = api.model(name="Datasets", model={
-    'datasets': fields.List(fields.Nested(dataset_overview), required=True,
-                            description='The datasets that the data owner has uploaded')
 })
 
 
@@ -36,6 +33,6 @@ class DatasetResources(Resource):
         DatasetsService.save(file)
         return 200
 
-    @api.marshal_list_with(datasets)
+    @api.marshal_list_with(dataset_overview)
     def get(self):
         return Dataset.find_all()
