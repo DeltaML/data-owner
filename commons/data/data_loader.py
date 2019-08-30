@@ -140,13 +140,13 @@ class DataLoader(metaclass=Singleton):
                 lowercase_cols = list(map(lambda x: x.lower(), columns[:-1]))
                 if set(lowercase_cols) != set(features):
                     continue
-                if feature_values.max().max() > feat_range[1]:
+                if feature_values.max().max() > float(feat_range[1]):
                     continue
-                if feature_values.min().min() < feat_range[0]:
+                if feature_values.min().min() < float(feat_range[0]):
                     continue
-                if target_values.max() > target_range[1]:
+                if target_values.max() > float(target_range[1]):
                     continue
-                if target_values.min() < target_range[0]:
+                if target_values.min() < float(target_range[0]):
                     continue
             except Exception as e:
                 print(e)
