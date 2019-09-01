@@ -108,4 +108,4 @@ venv.bak/
 
 data_owner/data_owner.db
 
-build/
+data_owner/static/*

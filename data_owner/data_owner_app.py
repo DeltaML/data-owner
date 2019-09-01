@@ -11,26 +11,10 @@ from data_owner.services.data_base import Database
 from data_owner.config.logging_config import DEV_LOGGING_CONFIG, PROD_LOGGING_CONFIG
 
 
-dictConfig({
-    'version': 1,
-    'formatters': {'default': {
-        'format': '[%(asctime)s] %(levelname)s in %(module)s: %(message)s',
-    }},
-    'handlers': {'wsgi': {
-        'class': 'logging.StreamHandler',
-        'stream': 'ext://flask.logging.wsgi_errors_stream',
-        'formatter': 'default'
-    }},
-    'root': {
-        'level': 'INFO',
-        'handlers': ['wsgi']
-    }
-})
-
 
 def create_app():
     # create and configure the app
-    flask_app = Flask(__name__, static_folder='static')
+    flask_app = Flask(__name__, static_folder='static/build/')
     if 'ENV_PROD' in os.environ and os.environ['ENV_PROD']:
         flask_app.config.from_pyfile("config/prod/app_config.py")
         dictConfig(PROD_LOGGING_CONFIG)
@@ -67,8 +51,10 @@ def ping():
 
 
 # Serve React App
+@app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve(path):
+    logging.info(path)
     if path != "" and os.path.exists(app.static_folder + path):
         return send_from_directory(app.static_folder, path)
     else:
