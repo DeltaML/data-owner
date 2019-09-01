@@ -1,9 +1,8 @@
 import os
 import logging
 from logging.config import dictConfig
-from flask import Flask, jsonify
+from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
-
 from commons.encryption.encryption_service import EncryptionService
 from data_owner.resources import api
 from data_owner.services.data_owner_service import DataOwnerService
@@ -31,7 +30,7 @@ dictConfig({
 
 def create_app():
     # create and configure the app
-    flask_app = Flask(__name__)
+    flask_app = Flask(__name__, static_folder='static')
     if 'ENV_PROD' in os.environ and os.environ['ENV_PROD']:
         flask_app.config.from_pyfile("config/prod/app_config.py")
         dictConfig(PROD_LOGGING_CONFIG)
@@ -65,3 +64,12 @@ data_owner_service.init(app.config, encryption_service)
 @app.route('/ping', methods=['GET'])
 def ping():
     return jsonify(200)
+
+
+# Serve React App
+@app.route('/<path:path>')
+def serve(path):
+    if path != "" and os.path.exists(app.static_folder + path):
+        return send_from_directory(app.static_folder, path)
+    else:
+        return send_from_directory(app.static_folder, 'index.html')
