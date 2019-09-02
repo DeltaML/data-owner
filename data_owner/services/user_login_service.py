@@ -9,7 +9,7 @@ class UserLoginService:
     https://developers.google.com/identity/sign-in/web/backend-auth
     """
 
-    CLIENT_ID = "334168139568-v83065ekhqqkd4ieppo2jjb4aqbdk5o8.apps.googleusercontent.com"
+    CLIENT_ID = "472467752298-t4oph39ih14iaro5rn0n0qsnqbsdev8e.apps.googleusercontent.com"
 
     @staticmethod
     def validate(idinfo):

@@ -1,20 +1,21 @@
 from flask_restplus import Resource, Namespace, fields
-from data_owner.services.data_owner_service import DataOwnerService
-from data_owner.services.entities.model_response import ModelResponse, NewModelResponse
-from data_owner.models.model import Model
+
+from data_owner.services.model_service import ModelService
 
 api = Namespace('models', description='Model related operations')
 
-model_detail_reduced = api.model(name='Models', model={
+model_reduced_response = api.model(name='Models', model={
     'id': fields.String(required=True, description='The model identifier'),
     'status': fields.String(required=True, description='The model status'),
     'name': fields.String(required=True, description='The model name'),
     'improvement': fields.Fixed(required=True, decimals=5, description='The model improvement'),
+    'cost': fields.Float(required=True, description='The model cost'),
     'iterations': fields.Integer(required=True, description='Number of iterations'),
     'mse': fields.Float(required=True, description='The model mse'),
     'user_id': fields.String(required=True, description='The model user_id'),
     'creation_date': fields.String(description='The model creation date')
 })
+
 
 mse_history = api.model(name='MSE History', model={
     'time': fields.String(required=True,
@@ -55,15 +56,13 @@ model = api.model(name='Model', model={
     'weights': fields.List(fields.Raw, required=True, description='The model weights')
 })
 
-data_owner = DataOwnerService()
-
 
 @api.route('', endpoint='models_resources_ep')
 class ModelsResources(Resource):
 
-    @api.marshal_list_with(model_detail_reduced)
+    @api.marshal_list_with(model_reduced_response)
     def get(self):
-        return [NewModelResponse(model) for model in Model.find_all()]
+        return ModelService.get_all()
 
 
 @api.route('/<model_id>', endpoint='model_resources_ep')
@@ -72,4 +71,4 @@ class ModelResources(Resource):
     @api.doc('Get trained model')
     @api.marshal_with(model_data)
     def get(self, model_id):
-        return ModelResponse(Model.get(model_id))
+        return ModelService.get(model_id)
