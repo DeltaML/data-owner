@@ -27,7 +27,7 @@ class ModelColumn(types.UserDefinedType):
         def process(value):
             x = value.X.tolist() if value.X is not None else None
             y = value.y.tolist() if value.y is not None else None
-            weights = value.weights.tolist()
+            weights = value.weights if type(value.weights) == list else value.weights.tolist()
             model_type = value.type
             return json.dumps({
                 'x': x, 'y': y, 'weights': weights, 'type': model_type
@@ -88,7 +88,7 @@ class Model(DbEntity):
         x_array = np.asarray(x)
         y_array = np.asarray(y)
         prediction = self.model.predict(x, y)
-        self.mse = prediction.mse
+        #self.mse = prediction.mse
         return prediction
 
     @classmethod
@@ -105,6 +105,7 @@ class Model(DbEntity):
         super(Model, self).update(Model, filters, update_data)
 
     def add_mse(self, mse):
+        self.mse = mse
         self.mse_history.append(dict(time=str(time.time()), mse=mse))
 
     @classmethod

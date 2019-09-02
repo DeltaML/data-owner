@@ -47,7 +47,7 @@ link = api.model(name='Link', model={
 })
 
 metric = api.model(name='Metric', model={
-    'mse': fields.Float(required=True, description='The model mse')
+    'mse': fields.List(fields.Raw, required=True, description='The model mse')
 })
 
 features = api.model(name='Features', model={
@@ -107,7 +107,7 @@ class TrainingResource(Resource):
         """
         logging.info('Process weights')
         data = request.get_json()
-        gradients = data_owner.process(model_id, data['weights'])
+        gradients = data_owner.process(model_id, data['weights'], data['public_key'])
         return {'data_owner_id': data_owner.get_id(), 'update': gradients}
 
     @api.doc('Update local model with gradient')
@@ -118,7 +118,7 @@ class TrainingResource(Resource):
         """
         data = request.get_json()
         logging.info('Gradient step')
-        data_owner.step(model_id, data['gradient'])
+        data_owner.step(model_id, data['gradient'], data['public_key'])
         return 200
 
 
@@ -132,5 +132,11 @@ class MetricsResource(Resource):
         model_type = data["model_type"]
         weights = data["model"]
         public_key = data["public_key"]
-        mse = data_owner.model_quality_metrics(model_id, model_type, weights, public_key)
+        mse = data_owner.model_quality_metrics(model_id, weights, model_type, public_key)
         return {'mse': mse}
+
+    def put(self, model_id):
+        logging.info("UPDATE MSE")
+        data = request.get_json()
+        data_owner.update_mse(model_id, data['mse'])
+        return 200

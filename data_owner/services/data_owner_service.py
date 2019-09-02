@@ -36,7 +36,7 @@ class DataOwnerService(metaclass=Singleton):
             self.register()
 
     @optimized_collection_parameter(optimization=np.asarray, active=True)
-    def process(self, model_id, weights):
+    def process(self, model_id, weights, public_key):
         """
         Process to run model
         :param model_type:
@@ -45,11 +45,13 @@ class DataOwnerService(metaclass=Singleton):
         """
         logging.info("Initializing local model")
         model_orm = Model.get(model_id)
-        model_orm.set_weights(weights)
+        model_weights = self._get_model_weights(weights, public_key)
+        model_orm.set_weights(model_weights)
         model, gradient = DataOwner().calculate_gradient(model_orm.model)
+        model.weights = self.encryption_service.get_serialized_encrypted_collection(model.weights)
         model_orm.model = model
         model_orm.update()
-        return gradient
+        return self.encryption_service.get_serialized_encrypted_collection(gradient)
 
     def register(self):
         """
@@ -63,19 +65,23 @@ class DataOwnerService(metaclass=Singleton):
         return self.client_id
 
     @optimized_collection_parameter(optimization=np.asarray, active=True)
-    def step(self, model_id, step_data):
+    def step(self, model_id, step_data, public_key):
         """
         :param model:
         :param step_data:
         :return:
         """
         model_orm = Model.get(model_id)
+        model_orm.model.weights = self._get_model_weights(model_orm.model.weights, public_key)
         model = DataOwner().step(model_orm.model, step_data, float(self.config['ETA']))
+        model.weights = self.encryption_service.get_serialized_encrypted_collection(model.weights)
+        model_orm.model = model
         model_orm.update()
         logging.info("Model current weights {}".format(model.weights.tolist()))
         return model
 
-    def model_quality_metrics(self, model_id, model_type, weights, public_key):
+    @optimized_collection_parameter(optimization=np.asarray, active=True)
+    def model_quality_metrics(self, model_id, weights, model_type, public_key):
         """
         Method used only by validator role. It doesn't use the model built from the data. It gets the model from
         the federated trainer and use the local data to calculate quality metrics
@@ -89,10 +95,29 @@ class DataOwnerService(metaclass=Singleton):
         model_weights = self._get_model_weights(weights, public_key)
         model.set_weights(model_weights)
         mse = data_owner.model_quality_metrics(model, X_test, y_test)
+        #model_orm.add_mse(mse)
+        #model_orm.update()
+        logging.info("Calculated mse: {}".format(mse))
+        if self.encryption_service.is_active:
+            return self.encryption_service.get_serialized_encrypted_collection(mse)
+        else:
+            return mse
+
+    def update_mse(self, model_id, mse):
+        """
+        Method used only by validator role. It doesn't use the model built from the data. It gets the model from
+        the federated trainer and use the local data to calculate quality metrics
+        :return: the model quality (currently measured with the MSE)
+        """
+        data_owner = DataOwner()
+        logging.info("Getting metrics, data owner: {}".format(self.client_id))
+        X_test, y_test = DataLoader().get_sub_set()
+        model_orm = Model.get(model_id)
+        model = model_orm.model
         model_orm.add_mse(mse)
         model_orm.update()
         logging.info("Calculated mse: {}".format(mse))
-        return mse
+
 
     def _get_model_weights(self, rq_weights, public_key):
         self.encryption_service.set_public_key(public_key)
