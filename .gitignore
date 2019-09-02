@@ -109,3 +109,4 @@ venv.bak/
 data_owner/data_owner.db
 
 data_owner/static/*
+node-server/node_modules/

@@ -45,6 +45,7 @@ Select _LOCAL_PORT_ number to run some containers
     docker run --rm -it -p <LOCAL_PORT>:5000 federated-learning-data_owner
 ``` 
 
+    docker run --rm -it -p 5001:5000 4001:4000 federated-learning-data_owner
 
 ### Using Pycharm
 
