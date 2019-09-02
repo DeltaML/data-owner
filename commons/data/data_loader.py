@@ -165,5 +165,5 @@ class DataLoader(metaclass=Singleton):
                             feature_values=feature_values,
                             target_values=target_values)
         except Exception as e:
-            print(e)
+            logging.error(e)
             return None

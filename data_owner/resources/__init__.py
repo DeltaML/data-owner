@@ -6,6 +6,7 @@ from data_owner.exceptions.exceptions import NoResultFoundException, LoginFailur
 from data_owner.resources.trainings_resource import api as trainings_api
 from data_owner.resources.datasets_resource import api as datasets_api
 from data_owner.resources.models_resource import api as models_api
+from data_owner.resources.users_resources import api as users_api
 
 api = Api(
     title='Data Owner Api',
@@ -18,6 +19,7 @@ api = Api(
 api.add_namespace(trainings_api)
 api.add_namespace(datasets_api)
 api.add_namespace(models_api)
+api.add_namespace(users_api)
 
 
 @api.errorhandler(LoginFailureException)
