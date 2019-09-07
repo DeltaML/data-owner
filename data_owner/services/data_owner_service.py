@@ -45,7 +45,7 @@ class DataOwnerService(metaclass=Singleton):
         """
         logging.info("Initializing local model")
         model_orm = Model.get(model_id)
-        model_weights = self._get_model_weights(weights, public_key)
+        model_weights = self._get_deserialized(weights, public_key)
         model_orm.set_weights(model_weights)
         model, gradient = DataOwner().calculate_gradient(model_orm.model)
         model.weights = self.encryption_service.get_serialized_encrypted_collection(model.weights)
@@ -67,17 +67,18 @@ class DataOwnerService(metaclass=Singleton):
     @optimized_collection_parameter(optimization=np.asarray, active=True)
     def step(self, model_id, step_data, public_key):
         """
-        :param model:
+        :param model_id:
         :param step_data:
+        :param public_key:
         :return:
         """
         model_orm = Model.get(model_id)
-        model_orm.model.weights = self._get_model_weights(model_orm.model.weights, public_key)
-        model = DataOwner().step(model_orm.model, step_data, float(self.config['ETA']))
+        model_orm.model.weights = self._get_deserialized(model_orm.model.weights, public_key)
+        model = DataOwner().step(model_orm.model, self._get_deserialized(step_data, public_key), float(self.config['ETA']))
         model.weights = self.encryption_service.get_serialized_encrypted_collection(model.weights)
         model_orm.model = model
         model_orm.update()
-        logging.info("Model current weights {}".format(model.weights.tolist()))
+        logging.info("Model current weights {}".format(model.weights))
         return model
 
     @optimized_collection_parameter(optimization=np.asarray, active=True)
@@ -92,7 +93,7 @@ class DataOwnerService(metaclass=Singleton):
         X_test, y_test = DataLoader().get_sub_set()
         model_orm = Model.get(model_id) or ModelFactory.get_model(model_type)()
         model = model_orm.model
-        model_weights = self._get_model_weights(weights, public_key)
+        model_weights = self._get_deserialized(weights, public_key)
         model.set_weights(model_weights)
         mse = data_owner.model_quality_metrics(model, X_test, y_test)
         #model_orm.add_mse(mse)
@@ -118,8 +119,7 @@ class DataOwnerService(metaclass=Singleton):
         model_orm.update()
         logging.info("Calculated mse: {}".format(mse))
 
-
-    def _get_model_weights(self, rq_weights, public_key):
+    def _get_deserialized(self, rq_weights, public_key):
         self.encryption_service.set_public_key(public_key)
         weights = rq_weights if not self.encryption_service.is_active else self.encryption_service.get_deserialized_collection(
             rq_weights)
