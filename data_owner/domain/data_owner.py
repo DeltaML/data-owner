@@ -12,7 +12,7 @@ class DataOwner(metaclass=Singleton):
         :return:
         """
         gradient = model.compute_gradient()
-        return model, gradient.tolist()
+        return model, gradient
 
     def step(self, model, step_data, eta=1.5):
         """

@@ -23,7 +23,7 @@ dictConfig({
         'formatter': 'default'
     }},
     'root': {
-        'level': 'ERROR',
+        'level': 'INFO',
         'handlers': ['wsgi']
     }
 })

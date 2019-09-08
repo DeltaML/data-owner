@@ -129,10 +129,7 @@ class MetricsResource(Resource):
     @api.marshal_with(metric, code=201)
     def post(self, model_id):
         data = request.get_json()
-        model_type = data["model_type"]
-        weights = data["model"]
-        public_key = data["public_key"]
-        mse = data_owner.model_quality_metrics(model_id, weights, model_type, public_key)
+        mse = data_owner.model_quality_metrics(model_id, data["model"], data["public_key"], data["model_type"])
         return {'mse': mse}
 
     def put(self, model_id):

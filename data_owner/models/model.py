@@ -82,13 +82,22 @@ class Model(DbEntity):
         self.mse_history = []
 
     def set_weights(self, weights):
+        if type(weights) == list:
+            weights = np.asarray(weights)
         self.model.set_weights(weights)
+
+    def get_weights(self):
+        weights = self.model.weights
+        return np.asarray(weights) if type(weights) == list else weights
+
+    def get_weights_as_list(self):
+        return self.model.weights.tolist()
 
     def predict(self, x, y):
         x_array = np.asarray(x)
         y_array = np.asarray(y)
         prediction = self.model.predict(x, y)
-        #self.mse = prediction.mse
+        self.mse = prediction.mse
         return prediction
 
     @classmethod
