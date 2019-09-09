@@ -106,3 +106,7 @@ venv.bak/
 #pycharm
 .idea
 
+data_owner/data_owner.db
+
+
+node-server/node_modules/

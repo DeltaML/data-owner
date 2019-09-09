@@ -6,13 +6,25 @@ COPY requirements.txt .
 # install app dependencies
 RUN pip install  --user -r requirements.txt
 
-FROM python:stretch AS release
+FROM nikolaik/python-nodejs AS release
 WORKDIR /app
+
+RUN npm install -g node-fetch express express-fileupload express-form-data multer body-parser form-data
 COPY --from=build /root/.local /root/.local
+
 ADD /commons /app/commons
 ADD /data_owner /app/data_owner
+ADD /node-server /app/node-server
+ADD /scripts/start_client.sh /app
+ADD /scripts/start_server.sh /app
+ADD /scripts/run.sh /app
+
 RUN mkdir -p /app/db
-ENV PATH=/root/.local/bin:$PAT
+
+ENV PATH=/root/.local/bin:$PATH
 ENV ENV_PROD=1
+#
 EXPOSE 5000
-CMD [ "gunicorn", "-b", "0.0.0.0:5000", "wsgi:app", "--chdir", "data_owner/", "--preload"]
+EXPOSE 4000
+RUN chmod +x run.sh
+CMD ["/bin/bash", "run.sh"]
