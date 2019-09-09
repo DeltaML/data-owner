@@ -12,12 +12,9 @@ WORKDIR /app
 RUN npm install -g node-fetch express express-fileupload express-form-data multer body-parser form-data
 COPY --from=build /root/.local /root/.local
 
-ADD /commons /app/commons
 ADD /data_owner /app/data_owner
 ADD /node-server /app/node-server
-ADD /scripts/start_client.sh /app
-ADD /scripts/start_server.sh /app
-ADD /scripts/run.sh /app
+ADD /scripts /app
 
 RUN mkdir -p /app/db
 

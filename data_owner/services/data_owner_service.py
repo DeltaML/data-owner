@@ -9,7 +9,8 @@ from commons.model.model_service import ModelFactory
 from commons.utils.singleton import Singleton
 from data_owner.domain.data_owner import DataOwner
 from data_owner.models.model import Model
-from data_owner.services.federated_trainer_connector import FederatedTrainerConnector
+from data_owner.services.datasets_service import DatasetsService
+from data_owner.services.federated_aggregator_connector import FederatedAggregatorConnector
 
 
 class DataOwnerService(metaclass=Singleton):
@@ -19,7 +20,7 @@ class DataOwnerService(metaclass=Singleton):
         self.trainings = {}
         self.config = None
         self.data_loader = None
-        self.federated_trainer_connector = None
+        self.federated_aggregator_connector = None
         self.encryption_service = None
 
     def init(self, config, encryption_service=None):
@@ -31,11 +32,11 @@ class DataOwnerService(metaclass=Singleton):
         self.client_id = str(uuid.uuid1())
         self.config = config
         self.encryption_service = encryption_service
-        self.federated_trainer_connector = FederatedTrainerConnector(self.config)
+        self.federated_aggregator_connector = FederatedAggregatorConnector(self.config)
         if config['REGISTRATION_ENABLE']:
             self.register()
 
-    @optimized_collection_parameter(optimization=np.asarray, active=True)
+    #@optimized_collection_parameter(optimization=np.asarray, active=False)
     def process(self, model_id, weights):
         """
         Process to run model
@@ -43,11 +44,14 @@ class DataOwnerService(metaclass=Singleton):
         :param weights:
         :return:
         """
+
         logging.info("Initializing local model")
         model_orm = Model.get(model_id)
-        model_orm.set_weights(weights)
+        model_orm.set_weights(np.asarray(weights))
         model, gradient = DataOwner().calculate_gradient(model_orm.model)
         model_orm.model = model
+        # TODO agrojas
+        model_orm.set_weights(model_orm.get_weights().tolist())
         model_orm.update()
         return gradient
 
@@ -56,13 +60,13 @@ class DataOwnerService(metaclass=Singleton):
         Register client into federated server
         :return:
         """
-        result = self.federated_trainer_connector.register(self.get_id())
+        result = self.federated_aggregator_connector.register(self.get_id())
         logging.info("DataOwner registration status:" + str(result))
 
     def get_id(self):
         return self.client_id
 
-    @optimized_collection_parameter(optimization=np.asarray, active=True)
+    #@optimized_collection_parameter(optimization=np.asarray, active=True)
     def step(self, model_id, step_data):
         """
         :param model:
@@ -70,9 +74,10 @@ class DataOwnerService(metaclass=Singleton):
         :return:
         """
         model_orm = Model.get(model_id)
-        model = DataOwner().step(model_orm.model, step_data, float(self.config['ETA']))
+        model = DataOwner().step(model_orm.model, np.asarray(step_data), float(self.config['ETA']))
+        # TODO agrojas
+        model_orm.model.weights = model_orm.model.weights.tolist()
         model_orm.update()
-        logging.info("Model current weights {}".format(model.weights.tolist()))
         return model
 
     def model_quality_metrics(self, model_id, model_type, weights, public_key):
@@ -90,6 +95,8 @@ class DataOwnerService(metaclass=Singleton):
         model.set_weights(model_weights)
         mse = data_owner.model_quality_metrics(model, X_test, y_test)
         model_orm.add_mse(mse)
+        # TODO agrojas
+        model_orm.model.weights = model_orm.model.weights.tolist()
         model_orm.update()
         logging.info("Calculated mse: {}".format(mse))
         return mse
@@ -101,21 +108,10 @@ class DataOwnerService(metaclass=Singleton):
         return np.asarray(weights)
 
     def link_model_to_dataset(self, model_id, model_type, reqs):
-        filename = DataLoader().get_dataset_for_training(reqs)
-        if filename is not None:
-            DataLoader().load_data(filename)
-            dataset = DataLoader().get_sub_set()
-            model = Model(model_id, model_type, dataset)
-            model.save()
-        return model_id, self.get_id(), filename is not None
-
-
-class DataOwnerFactory:
-    @classmethod
-    def create_data_owner(cls, name):
-        """
-        :param name:
-        :param data_loader:
-        :return:
-        """
-        return DataOwnerService(name)
+        has_dataset = False
+        dataset = DatasetsService().get_dataset_for_training(reqs)
+        if not dataset:
+            return model_id, self.get_id(), has_dataset
+        model = Model(model_id, model_type, dataset)
+        model.save()
+        return model_id, self.get_id(), not has_dataset

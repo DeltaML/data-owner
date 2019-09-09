@@ -11,7 +11,6 @@ from data_owner.services.data_base import Database
 from data_owner.config.logging_config import DEV_LOGGING_CONFIG, PROD_LOGGING_CONFIG
 
 
-
 def create_app():
     # create and configure the app
     flask_app = Flask(__name__, static_folder='static/build/')
@@ -39,8 +38,7 @@ logging.info("Data owner is running")
 encryption_service = EncryptionService(is_active=app.config["ACTIVE_ENCRYPTION"])
 
 data_base = Database(app.config)
-data_loader = DataLoader()
-data_loader.init(app.config["DATASETS_DIR"])
+data_loader = DataLoader(app.config["DATASETS_DIR"])
 data_owner_service = DataOwnerService()
 data_owner_service.init(app.config, encryption_service)
 

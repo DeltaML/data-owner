@@ -1,4 +1,5 @@
 from datetime import datetime
+import logging
 import time
 from enum import Enum
 from flask import json
@@ -27,8 +28,8 @@ class ModelColumn(types.UserDefinedType):
         def process(value):
             x = value.X.tolist() if value and value.X.all() else None
             y = value.y.tolist() if value and value.y.all() else None
-            weights = value.weights.tolist() if value and value.weights.any() else None
-            model_type = value.type if value and value.type else None
+            weights = value.weights
+            model_type = value.type
             return json.dumps({
                 'x': x, 'y': y, 'weights': weights, 'type': model_type
             })
@@ -71,7 +72,9 @@ class Model(DbEntity):
     def __init__(self, model_id, model_type, data, name="default"):
         self.id = model_id
         self.model_type = model_type
-        self.model = ModelFactory.get_model(model_type)(data[0], data[1])
+        _model = ModelFactory.get_model(model_type)(X=data[0], y=data[1])
+        self.model = _model
+        self.model.set_weights(_model.weights.tolist())
         self.model.type = model_type
         self.status = TrainingStatus.INITIATED.name
         self.iterations = 0
@@ -84,6 +87,9 @@ class Model(DbEntity):
 
     def set_weights(self, weights):
         self.model.set_weights(weights)
+
+    def get_weights(self):
+        return self.model.weights
 
     def predict(self, x, y):
         x_array = np.asarray(x)

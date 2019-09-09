@@ -117,7 +117,7 @@ class TrainingResource(Resource):
         :return:
         """
         data = request.get_json()
-        logging.info('Gradient step')
+        logging.info('Gradient step {}'.format(data))
         data_owner.step(model_id, data['gradient'])
         return 200
 
