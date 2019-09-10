@@ -1,10 +1,8 @@
 import logging
 import uuid
 
-import numpy as np
-
 from commons.data.data_loader import DataLoader
-from commons.decorators.decorators import optimized_collection_parameter, data_owner_computation
+from commons.decorators.decorators import data_owner_computation
 from commons.model.model_service import ModelFactory
 from commons.utils.singleton import Singleton
 from commons.operations_utils.functions import deserialize, serialize
@@ -54,11 +52,10 @@ class DataOwnerService(metaclass=Singleton):
         """
         logging.info("Initializing local model")
         model_orm = Model.get(model_id)
-        # model_weights = self._get_deserialized(weights, public_key)
         model_orm.set_weights(weights)
         model, gradient = DataOwner().calculate_gradient(model_orm.model)
         self.update_stored_model(model_orm, model, public_key)
-        return gradient  # self.encryption_service.get_serialized_encrypted_collection(gradient)
+        return gradient
 
     def register(self):
         """
@@ -80,14 +77,8 @@ class DataOwnerService(metaclass=Singleton):
         :return:
         """
         model_orm = Model.get(model_id)
-        #model_orm.model.weights = self._get_deserialized(model_orm.model.weights, public_key)
-        #model_orm.set_weights(self._get_deserialized(model_orm.get_weights(), public_key))
         self.get_stored_model(model_orm, public_key)
         model = DataOwner().step(model_orm.model, step_data, float(self.config['ETA']))
-        #model.weights = self.encryption_service.get_serialized_encrypted_collection(model.weights)
-        #model_orm.model = model
-        #model_orm.update()
-        #logging.info("Model current weights {}".format(model.weights))
         return model.weights
 
     @data_owner_computation()
@@ -101,18 +92,11 @@ class DataOwnerService(metaclass=Singleton):
         logging.info("Getting metrics, data owner: {}".format(self.client_id))
         X_test, y_test = DataLoader().get_sub_set()
         model_orm = Model.get(model_id) or ModelFactory.get_model(model_type)()
-        #model = model_orm.model
-        #model_weights = self._get_deserialized(weights, public_key)
-        #model.set_weights(model_weights)
         model_orm.set_weights(weights)
         diffs = data_owner.model_quality_metrics(model_orm.model, X_test, y_test)
         #model_orm.add_mse(mse)
         #model_orm.update()
         logging.info("Calculated mse: {}".format(diffs))
-        #if self.encryption_service.is_active:
-        #    return self.encryption_service.get_serialized_encrypted_collection(mse)
-        #else:
-        #    return mse
         return diffs
 
     def update_mse(self, model_id, mse):
@@ -121,11 +105,8 @@ class DataOwnerService(metaclass=Singleton):
         the federated trainer and use the local data to calculate quality metrics
         :return: the model quality (currently measured with the MSE)
         """
-        data_owner = DataOwner()
         logging.info("Getting metrics, data owner: {}".format(self.client_id))
-        X_test, y_test = DataLoader().get_sub_set()
         model_orm = Model.get(model_id)
-        model = model_orm.model
         model_orm.add_mse(mse)
         model_orm.update()
         logging.info("Calculated mse: {}".format(mse))

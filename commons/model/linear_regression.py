@@ -33,11 +33,7 @@ class LinearRegression(DeltaModel):
     def predict(self, X, y_test=None):
         """Score test data"""
         values = X.dot(self.weights)
-        #mse = mean_square_error(values, y_test) if y_test is not None else None
-        import logging
-        logging.info("Y_TEST: {}".format(y_test))
-        logging.info("Y_PRED: {}".format(values))
-        mse = None
+        diff = None
         if y_test is not None:
-            mse = pred_diff(values, y_test)
-        return Prediction(values=values, mse=mse)
+            diff = pred_diff(values, y_test)
+        return Prediction(values=values, diff=diff)
