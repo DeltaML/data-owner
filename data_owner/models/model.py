@@ -26,10 +26,9 @@ class ModelColumn(types.UserDefinedType):
 
     def bind_processor(self, dialect):
         def process(value):
-            x = value.X.tolist() if value and value.X.all() else None
-            y = value.y.tolist() if value and value.y.all() else None
-            #weights = value.get_weights()
-            weights = value.weights if type(value.weights) == list else value.weights.tolist()
+            x = value.X.tolist() if value.X is not None else None
+            y = value.y.tolist() if value.y is not None else None
+            weights = value.weights.tolist() if value and value.weights.any() else None
             model_type = value.type
             return json.dumps({
                 'x': x, 'y': y, 'weights': weights, 'type': model_type
@@ -43,8 +42,7 @@ class ModelColumn(types.UserDefinedType):
             y = np.asarray(model_data['y'])
             model_type = model_data['type']
             weights = np.asarray(model_data['weights'])
-            model = ModelFactory.get_model(model_type)(x, y)
-            model.set_weights(weights)
+            model = ModelFactory.get_model(model_type)(X=x, y=y, weights=weights)
             return model
         return process
 
