@@ -47,11 +47,13 @@ class DataOwnerService(metaclass=Singleton):
 
         logging.info("Initializing local model")
         model_orm = Model.get(model_id)
-        model_orm.set_weights(np.asarray(weights))
+        # TODO agrojas
+        model_orm.set_weights(weights)
+        #model_orm.set_weights(np.asarray(weights))
         model, gradient = DataOwner().calculate_gradient(model_orm.model)
         model_orm.model = model
         # TODO agrojas
-        model_orm.set_weights(model_orm.get_weights().tolist())
+        #model_orm.set_weights(model_orm.get_weights().tolist())
         model_orm.update()
         return gradient
 
@@ -69,14 +71,14 @@ class DataOwnerService(metaclass=Singleton):
     #@optimized_collection_parameter(optimization=np.asarray, active=True)
     def step(self, model_id, step_data):
         """
-        :param model:
+        :param model_id:
         :param step_data:
         :return:
         """
         model_orm = Model.get(model_id)
-        model = DataOwner().step(model_orm.model, np.asarray(step_data), float(self.config['ETA']))
         # TODO agrojas
-        model_orm.model.weights = model_orm.model.weights.tolist()
+        model = DataOwner().step(model_orm.model, step_data, float(self.config['ETA']))
+        #model_orm.model.weights = model_orm.model.weights.tolist()
         model_orm.update()
         return model
 
@@ -96,7 +98,7 @@ class DataOwnerService(metaclass=Singleton):
         mse = data_owner.model_quality_metrics(model, X_test, y_test)
         model_orm.add_mse(mse)
         # TODO agrojas
-        model_orm.model.weights = model_orm.model.weights.tolist()
+        #model_orm.model.weights = model_orm.model.weights.tolist()
         model_orm.update()
         logging.info("Calculated mse: {}".format(mse))
         return mse

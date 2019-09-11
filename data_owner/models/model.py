@@ -28,7 +28,8 @@ class ModelColumn(types.UserDefinedType):
         def process(value):
             x = value.X.tolist() if value and value.X.all() else None
             y = value.y.tolist() if value and value.y.all() else None
-            weights = value.weights
+            #weights = value.get_weights()
+            weights = value.weights if type(value.weights) == list else value.weights.tolist()
             model_type = value.type
             return json.dumps({
                 'x': x, 'y': y, 'weights': weights, 'type': model_type
@@ -48,7 +49,7 @@ class ModelColumn(types.UserDefinedType):
         return process
 
 
-class Model(DbEntity):
+class BaseModel(DbEntity):
     __tablename__ = 'models'
     id = Column(String(100), primary_key=True)
     model_type = Column(String(50))
@@ -92,8 +93,6 @@ class Model(DbEntity):
         return self.model.weights
 
     def predict(self, x, y):
-        x_array = np.asarray(x)
-        y_array = np.asarray(y)
         prediction = self.model.predict(x, y)
         self.mse = prediction.mse
         return prediction
@@ -105,15 +104,28 @@ class Model(DbEntity):
 
     def update(self):
         filters = {'id': self.id}
-        update_data = {Model.model: self.model, Model.status: self.status, Model.iterations: self.iterations,
-                       Model.improvement: self.improvement, Model.name: self.name,
-                       Model.mse_history: self.mse_history, Model.initial_mse: self.initial_mse,
-                       Model.updated_date: self.updated_date, Model.mse: self.mse}
-        super(Model, self).update(Model, filters, update_data)
+        update_data = {BaseModel.model: self.model, BaseModel.status: self.status, BaseModel.iterations: self.iterations,
+                       BaseModel.improvement: self.improvement, BaseModel.name: self.name,
+                       BaseModel.mse_history: self.mse_history, BaseModel.initial_mse: self.initial_mse,
+                       BaseModel.updated_date: self.updated_date, BaseModel.mse: self.mse}
+        super(BaseModel, self).update(BaseModel, filters, update_data)
 
     def add_mse(self, mse):
         self.mse_history.append(dict(time=str(time.time()), mse=mse))
 
     @classmethod
     def find_all(cls):
-        return DbEntity.find(Model)
+        return DbEntity.find(BaseModel)
+
+
+class Model(BaseModel):
+
+    def __init__(self, model_id, model_type, data, name="default"):
+        super(Model, self).__init__(model_id, model_type, data, name)
+
+    def set_weights(self, weights):
+        weights = np.asarray(weights) if type(weights) == list else weights
+        self.model.set_weights(weights)
+
+    def get_weights(self):
+        return self.model.weights if type(self.model.weights) == list else self.model.weights.tolist()

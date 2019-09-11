@@ -55,6 +55,17 @@ Select _LOCAL_PORT_ number to run some containers
 
 
 ## Usage 
+
+
+### Upload file
+```bash 
+ curl -v  -F ‘data=/data_owner/dataset/file_1.csv’ "http://localhost:5000/weights"
+ 
+ curl -v -X POST file=@"data_owner/dataset/file_1.csv" http://localhost:5000/datasets
+
+
+```
+
  
 ### Process weights
 

@@ -20,6 +20,8 @@ class DatasetsService:
         logging.info(file)
         file.save('{}/{}'.format(cls.DATASET_DIR, file.filename))
         metadata = DataLoader().get_dataset_metadata(file.filename)
+        if not metadata:
+            raise InvalidFileException()
         ds = Dataset(metadata.id,
                 file.filename,
                 metadata.features,
@@ -27,7 +29,6 @@ class DatasetsService:
                 metadata.features_min,
                 metadata.target_max,
                 metadata.target_min)
-        logging.info(ds)
         ds.save()
         file.close()
 
@@ -44,7 +45,7 @@ class DatasetsService:
     def validate(cls, file):
         if not file:
             raise InvalidFileException("Empty file")
-        if file.content_type not in cls.VALID_FILE_TYPES:
+        if cls.allowed_file_extension(file.filename):
             raise InvalidFileException("Invalid file type")
 
     def get_dataset_for_training(self, reqs):
@@ -56,11 +57,26 @@ class DatasetsService:
         DataLoader().load_data(ds.filename)
         return DataLoader().get_sub_set()
 
+    @classmethod
+    def allowed_file_extension(cls, filename):
+
+        # We only want files with a . in the filename
+        if not "." in filename:
+            return False
+
+        # Split the extension from the filename
+        ext = filename.rsplit(".", 1)[1]
+
+        # Check if the extension is in VALID_FILE_TYPES
+        if ext.upper() in cls.VALID_FILE_TYPES:
+            return True
+        else:
+            return False
 
     @staticmethod
     def search_dataset_by_requirements(requeriments):
         """
-        TODO -> refactor this to query
+        TODO agrojas -> refactor this to query
         Iterates over the files in the datasets directory and verifies wich of those comply with the requested
         requirements for the current model training. The last of the datasets that complies with the requirements
         is then returned by this method.
