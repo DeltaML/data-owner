@@ -28,7 +28,7 @@ class ModelColumn(types.UserDefinedType):
         def process(value):
             x = value.X.tolist() if value.X is not None else None
             y = value.y.tolist() if value.y is not None else None
-            weights = value.weights.tolist() if value and value.weights.any() else None
+            weights = value.weights if type(value.weights) == list else value.weights.tolist() if value and value.weights.any() else None
             model_type = value.type
             return json.dumps({
                 'x': x, 'y': y, 'weights': weights, 'type': model_type
@@ -85,10 +85,16 @@ class BaseModel(DbEntity):
         self.mse_history = []
 
     def set_weights(self, weights):
+        if type(weights) == list:
+            weights = np.asarray(weights)
         self.model.set_weights(weights)
 
     def get_weights(self):
-        return self.model.weights
+        weights = self.model.weights
+        return np.asarray(weights) if type(weights) == list else weights
+
+    def get_weights_as_list(self):
+        return self.model.weights.tolist()
 
     def predict(self, x, y):
         prediction = self.model.predict(x, y)
@@ -109,6 +115,7 @@ class BaseModel(DbEntity):
         super(BaseModel, self).update(BaseModel, filters, update_data)
 
     def add_mse(self, mse):
+        self.mse = mse
         self.mse_history.append(dict(time=str(time.time()), mse=mse))
 
     @classmethod

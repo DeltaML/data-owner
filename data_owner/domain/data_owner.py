@@ -1,6 +1,7 @@
 from commons.utils.singleton import Singleton
 import numpy as np
 
+
 class DataOwner(metaclass=Singleton):
     # TODO (Fabrizio): Ver que esta clase no quede como un pasamanos
 
@@ -12,7 +13,7 @@ class DataOwner(metaclass=Singleton):
         :return:
         """
         gradient = model.compute_gradient()
-        return model, gradient.tolist()
+        return model, gradient
 
     def step(self, model, step_data, eta=1.5):
         """
@@ -32,11 +33,11 @@ class DataOwner(metaclass=Singleton):
         :param X_test: the test dataset features
         :param y_test: the expected target of the test dataset
         Method used only by validator role. It doesn't use the model built from the data. It gets the model from
-        the federated trainer and use the local data to calculate quality metrics
-        :return: the model quality (currently measured with the MSE)
+        the federated trainer and use the local data to calculate the vector difference between y_test and y_pred
+        :return: the difference between y_test and y_pred
         """
-        mse = model.predict(X_test, y_test).mse
-        return mse
+        diff = model.predict(X_test, y_test).diff
+        return diff
 
 
 class DataOwnerFactory:

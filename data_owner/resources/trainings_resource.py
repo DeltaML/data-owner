@@ -47,7 +47,7 @@ link = api.model(name='Link', model={
 })
 
 metric = api.model(name='Metric', model={
-    'mse': fields.Float(required=True, description='The model mse')
+    'diff': fields.List(fields.Raw, required=True, description='The difference between y and y_pred')
 })
 
 features = api.model(name='Features', model={
@@ -107,7 +107,7 @@ class TrainingResource(Resource):
         """
         logging.info('Process weights')
         data = request.get_json()
-        gradients = data_owner.process(model_id, data['weights'])
+        gradients = data_owner.process(model_id, data['weights'], data['public_key'])
         return {'data_owner_id': data_owner.get_id(), 'update': gradients}
 
     @api.doc('Update local model with gradient')
@@ -117,20 +117,22 @@ class TrainingResource(Resource):
         :return:
         """
         data = request.get_json()
-        logging.info('Gradient step {}'.format(data))
-        data_owner.step(model_id, data['gradient'])
+        logging.info('Gradient step')
+        data_owner.step(model_id, data['gradient'], data['public_key'])
         return 200
 
 
 @api.route('/<model_id>/metrics', endpoint='metrics_resource_ep')
 class MetricsResource(Resource):
 
-    @api.doc('Generate a new metric that measures the quality of a model')
+    @api.doc('Generate a new vector which is the difference between y_test and y_pred')
     @api.marshal_with(metric, code=201)
     def post(self, model_id):
         data = request.get_json()
-        model_type = data["model_type"]
-        weights = data["model"]
-        public_key = data["public_key"]
-        mse = data_owner.model_quality_metrics(model_id, model_type, weights, public_key)
-        return {'mse': mse}
+        diff = data_owner.model_quality_metrics(model_id, data["model"], data["public_key"], data["model_type"])
+        return {'diff': diff}
+
+    def put(self, model_id):
+        data = request.get_json()
+        data_owner.update_mse(model_id, data['mse'])
+        return 200
