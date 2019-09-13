@@ -22,7 +22,7 @@ DEV_LOGGING_CONFIG = {
     },
     'loggers': {
         'my_module': {
-            'level': 'INFO',
+            'level': 'ERROR',
             'handlers': ['console'],
             'propagate': 'no'
         }
@@ -57,7 +57,7 @@ PROD_LOGGING_CONFIG = {
     },
     'loggers': {
         'my_module': {
-            'level': 'INFO',
+            'level': 'ERROR',
             'handlers': ['console'],
             'propagate': 'no'
         }
