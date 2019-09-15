@@ -1,4 +1,5 @@
 from commons.utils.singleton import Singleton
+import numpy as np
 
 
 class DataOwner(metaclass=Singleton):
@@ -21,6 +22,8 @@ class DataOwner(metaclass=Singleton):
         :param eta: the length of the step
         :return:
         """
+        # TODO agrojas
+        step_data = np.asarray(step_data) if type(step_data) == list else step_data
         model.gradient_step(step_data, eta)
         return model
 

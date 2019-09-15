@@ -1,4 +1,5 @@
 from datetime import datetime
+import logging
 import time
 from enum import Enum
 from flask import json
@@ -27,7 +28,7 @@ class ModelColumn(types.UserDefinedType):
         def process(value):
             x = value.X.tolist() if value.X is not None else None
             y = value.y.tolist() if value.y is not None else None
-            weights = value.weights if type(value.weights) == list else value.weights.tolist()
+            weights = value.weights if type(value.weights) == list else value.weights.tolist() if value and value.weights.any() else None
             model_type = value.type
             return json.dumps({
                 'x': x, 'y': y, 'weights': weights, 'type': model_type
@@ -46,7 +47,7 @@ class ModelColumn(types.UserDefinedType):
         return process
 
 
-class Model(DbEntity):
+class BaseModel(DbEntity):
     __tablename__ = 'models'
     id = Column(String(100), primary_key=True)
     model_type = Column(String(50))
@@ -70,7 +71,9 @@ class Model(DbEntity):
     def __init__(self, model_id, model_type, data, name="default"):
         self.id = model_id
         self.model_type = model_type
-        self.model = ModelFactory.get_model(model_type)(X=data[0], y=data[1])
+        _model = ModelFactory.get_model(model_type)(X=data[0], y=data[1])
+        self.model = _model
+        self.model.set_weights(_model.weights.tolist())
         self.model.type = model_type
         self.status = TrainingStatus.INITIATED.name
         self.iterations = 0
@@ -94,8 +97,6 @@ class Model(DbEntity):
         return self.model.weights.tolist()
 
     def predict(self, x, y):
-        x_array = np.asarray(x)
-        y_array = np.asarray(y)
         prediction = self.model.predict(x, y)
         self.mse = prediction.mse
         return prediction
@@ -103,15 +104,15 @@ class Model(DbEntity):
     @classmethod
     def get(cls, model_id=None):
         filters = {'id': model_id} if model_id else None
-        return DbEntity.find(Model, filters)
+        return DbEntity.find(BaseModel, filters)
 
     def update(self):
         filters = {'id': self.id}
-        update_data = {Model.model: self.model, Model.status: self.status, Model.iterations: self.iterations,
-                       Model.improvement: self.improvement, Model.name: self.name,
-                       Model.mse_history: self.mse_history, Model.initial_mse: self.initial_mse,
-                       Model.updated_date: self.updated_date, Model.mse: self.mse}
-        super(Model, self).update(Model, filters, update_data)
+        update_data = {BaseModel.model: self.model, BaseModel.status: self.status, BaseModel.iterations: self.iterations,
+                       BaseModel.improvement: self.improvement, BaseModel.name: self.name,
+                       BaseModel.mse_history: self.mse_history, BaseModel.initial_mse: self.initial_mse,
+                       BaseModel.updated_date: self.updated_date, BaseModel.mse: self.mse}
+        super(BaseModel, self).update(BaseModel, filters, update_data)
 
     def add_mse(self, mse):
         self.mse = mse
@@ -119,4 +120,17 @@ class Model(DbEntity):
 
     @classmethod
     def find_all(cls):
-        return DbEntity.find(Model)
+        return DbEntity.find(BaseModel)
+
+
+class Model(BaseModel):
+
+    def __init__(self, model_id, model_type, data, name="default"):
+        super(Model, self).__init__(model_id, model_type, data, name)
+
+    def set_weights(self, weights):
+        weights = np.asarray(weights) if type(weights) == list else weights
+        self.model.set_weights(weights)
+
+    def get_weights(self):
+        return self.model.weights if type(self.model.weights) == list else self.model.weights.tolist()
