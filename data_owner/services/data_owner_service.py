@@ -108,6 +108,7 @@ class DataOwnerService(metaclass=Singleton):
         model_orm = Model.get(model_id)
         model_orm.add_mse(mse)
         model_orm.update()
+        logging.info("Calculated mse: {}".format(mse))
 
     def link_model_to_dataset(self, model_id, model_type, reqs):
         has_dataset = False

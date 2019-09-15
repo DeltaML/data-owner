@@ -104,7 +104,7 @@ class BaseModel(DbEntity):
     @classmethod
     def get(cls, model_id=None):
         filters = {'id': model_id} if model_id else None
-        return DbEntity.find(Model, filters)
+        return DbEntity.find(BaseModel, filters)
 
     def update(self):
         filters = {'id': self.id}
