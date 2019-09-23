@@ -22,7 +22,7 @@ dataset_overview = api.model(name='DatasetOverview', model={
 })
 
 
-@api.route('', endpoint='datasets_resources_ep')
+@api.route('', endpoint='da8tasets_resources_ep')
 class DatasetResources(Resource):
 
     @api.doc('Save new  Dataset')

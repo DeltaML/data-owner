@@ -55,6 +55,17 @@ Select _LOCAL_PORT_ number to run some containers
 
 
 ## Usage 
+
+
+### Upload file
+```bash 
+ curl -v  -F ‘data=/data_owner/dataset/file_1.csv’ "http://localhost:5000/weights"
+ 
+ curl -v -X POST file=@"data_owner/dataset/file_1.csv" http://localhost:5000/datasets
+
+
+```
+
  
 ### Process weights
 
@@ -82,7 +93,7 @@ curl -v -H "Content-Type: application/json" -X GET "http://localhost:9090/model"
 ``` python3
 
 N_SEGMENTS = 5
-FEDERATED_TRAINER_HOST = "http://cte_federated_trainer:8080"
+FEDERATED_AGGREGATOR_HOST = "http://cte_federated_aggregator:8080"
 ETA = 1.5
 REGISTRATION_ENABLE = True
 ACTIVE_ENCRYPTION = False
@@ -92,7 +103,7 @@ ACTIVE_ENCRYPTION = False
 ### Configuration details
 
 - N_SEGMENTS: __TODO__
-- FEDERATED_TRAINER_HOST: __TODO__
+- FEDERATED_AGGREGATOR_HOST: __TODO__
 - ETA: __TODO__
 - REGISTRATION_ENABLE: __TODO__
 - ACTIVE_ENCRYPTION: __TODO__

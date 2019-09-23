@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, JSON
+from sqlalchemy import Column, String, Integer, JSON, Float
 from data_owner.services.data_base import DbEntity
 
 
@@ -8,6 +8,13 @@ class Dataset(DbEntity):
     external_id = Column(String(500), unique=True)
     filename = Column(String(100), unique=True)
     features = Column(JSON)
+    features_max = Column(Float)
+    features_min = Column(Float)
+    target_max = Column(Float)
+    target_min = Column(Float)
+
+    # TODO:
+    #linked_models = Column(JSON)
 
     def __init__(self,
                  external_id,
@@ -63,7 +70,12 @@ class Dataset(DbEntity):
         return str({
             'external_id': str(self.external_id),
             'filename': str(self.filename),
-            'features': str(self.features)
+            'features': str(self.features),
+            'features_max': str(self.features_max),
+            'features_min': str(self.features_min),
+            'target_max': str(self.target_max),
+            'target_min': str(self.target_min)
+
         })
 
     def __repr__(self):
