@@ -1,5 +1,5 @@
-from flask_restplus import Resource, Namespace, fields
-
+from flask_restplus import Resource, Namespace, fields, reqparse
+from data_owner.models.model import TrainingStatus
 from data_owner.services.model_service import ModelService
 
 api = Namespace('models', description='Model related operations')
@@ -62,7 +62,10 @@ class ModelsResources(Resource):
 
     @api.marshal_list_with(model_reduced_response)
     def get(self):
-        return ModelService.get_all()
+        parser = reqparse.RequestParser()
+        parser.add_argument('status', type=str, help='Status cannot be converted')
+        args = parser.parse_args()
+        return ModelService.get_all(args)
 
 
 @api.route('/<model_id>', endpoint='model_resources_ep')

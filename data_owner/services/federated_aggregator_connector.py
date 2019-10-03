@@ -19,6 +19,13 @@ class FederatedAggregatorConnector:
         response.raise_for_status()
         return response.status_code == requests.codes.ok
 
+    def accept_model_training(self, client_id, model_id):
+        server_register_url = self.federated_aggregator_host + "/model/" + model_id + "/accept"
+        logging.info("Register client {} to server {}".format(client_id, server_register_url))
+        response = requests.post(server_register_url, json={'data_owner_id': client_id, 'model_id': model_id})
+        response.raise_for_status()
+        return response.status_code == requests.codes.ok
+
     def send_prediction(self, prediction):
         server_register_url = self.federated_aggregator_host + "/prediction"
         logging.info("Send prediction")
