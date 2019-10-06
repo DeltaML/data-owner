@@ -118,6 +118,7 @@ class DataOwnerService(metaclass=Singleton):
             return model_id, self.get_id(), has_dataset
         model.link_to_dataset(dataset)
         model.update()
+        self.federated_aggregator_connector.accept_model_training(self.get_id(), model_id)
         return model_id, self.get_id(), not has_dataset
 
     def model_is_linked(self, model_id):
