@@ -10,7 +10,7 @@ class User(DbEntity):
     name = Column(String(100))
     token = Column(String(100))
 
-    def __init__(self, external_id, email, name, token):
+    def __init__(self, email, name, token, external_id=None):
         self.external_id = external_id
         self.email = email
         self.name = name

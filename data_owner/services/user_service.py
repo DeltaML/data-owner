@@ -24,7 +24,7 @@ class UserService:
 
     @staticmethod
     def update(user_id, user_data):
-        return User().partial_update(user_id, user_data)
+        return UserService.get(user_id).partial_update(user_id, user_data)
 
     def delete(self, user_id):
         user = self.get(user_id)
@@ -51,4 +51,4 @@ class UserService:
                     email=user_info["email"],
                     token=token)
         user.save()
-        return user
+        return User.find_one_by_external_id(user_external_id)
