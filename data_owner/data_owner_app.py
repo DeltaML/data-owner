@@ -9,6 +9,7 @@ from data_owner.services.data_owner_service import DataOwnerService
 from commons.data.data_loader import DataLoader
 from data_owner.services.data_base import Database
 from data_owner.config.logging_config import DEV_LOGGING_CONFIG, PROD_LOGGING_CONFIG
+from data_owner.services.user_service import UserService
 
 
 def create_app():
@@ -41,6 +42,8 @@ data_base = Database(app.config)
 data_loader = DataLoader(app.config["DATASETS_DIR"])
 data_owner_service = DataOwnerService()
 data_owner_service.init(app.config, encryption_service)
+user_service = UserService()
+user_service.init(app.config, data_owner_service)
 
 
 @app.route('/ping', methods=['GET'])

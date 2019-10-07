@@ -9,25 +9,51 @@ from data_owner.services.user_service import UserService
 api = Namespace('users', description='Users related operations')
 
 
-user_google_token_req = api.model(name='User', model={
+user_google_token_req = api.model(name='UserGoogleLogin', model={
     'token': fields.String(required=True, description='Google login token')
 })
 
-user_data = api.model(name='User', model={
-    'id': fields.String(required=True, description='The user identifier'),
-    'external_id': fields.String(required=True, description='The user identifier'),
+
+user_register_req = api.model(name='UserRegister', model={
+    'address': fields.String(required=True, description='User register request')
+})
+
+
+user_register_data = api.model(name='UserRequest', model={
     'name': fields.String(required=True, description='The user name'),
     'email': fields.String(required=True, description='The user email'),
     'token': fields.String(required=True, description='The user token'),
-    'models': fields.Nested(model, required=True, description='The user models')
+    'address': fields.String(required=True, description='The user ethereum address')
+})
+
+user_data = api.model(name='UserResponse', model={
+    'id': fields.String(required=True, description='The user identifier'),
+    'external_id': fields.String(required=True, description='External user id. From external service'),
+    'delta_id': fields.String(required=True, description='Delta id. From delta ml context'),
+    'name': fields.String(required=True, description='The user name'),
+    'email': fields.String(required=True, description='The user email'),
+    'token': fields.String(required=True, description='The user token'),
+    'address': fields.String(required=True, description='The user ethereum address'),
+    'models': fields.Nested(model, required=False, description='The user models')
+})
+
+
+user_basic_data = api.model(name='UserReducedResponse', model={
+    'id': fields.String(required=True, description='The user identifier'),
+    'external_id': fields.String(required=True, description='External user id. From external service'),
+    'delta_id': fields.String(required=True, description='Delta id. From delta ml context'),
+    'name': fields.String(required=True, description='The user name'),
+    'email': fields.String(required=True, description='The user email'),
+    'token': fields.String(required=True, description='The user token'),
+    'address': fields.String(required=True, description='The user ethereum address')
 })
 
 
 @api.route('', endpoint='users_resources_ep')
 class UserResources(Resource):
 
-    @api.expect(user_data)
-    @api.marshal_with(user_data, code=201)
+    @api.expect(user_register_data)
+    @api.marshal_with(user_basic_data, code=201)
     @api.doc('Create new user')
     def post(self):
         logging.info("Creating new user")
@@ -44,7 +70,7 @@ class UserResources(Resource):
 @api.param('user_id', 'The user identifier')
 class UserResource(Resource):
 
-    @api.doc('patch_user')
+    @api.doc('Update user')
     @api.expect(user_data)
     @api.marshal_with(user_data)
     def put(self, user_id):
@@ -74,5 +100,19 @@ class UserLoginResources(Resource):
         logging.info("Login user")
         data = request.get_json()
         response = UserService().login(data)
+        logging.info(response)
+        return response, 200
+
+
+@api.route('/<user_id>/register', endpoint='users_register_resources_ep')
+class UserLoginResources(Resource):
+
+    @api.expect(user_register_req)
+    @api.marshal_with(user_basic_data, code=201)
+    @api.doc('Register user in federated aggregator')
+    def post(self, user_id):
+        logging.info("Register user")
+        data = request.get_json()
+        response = UserService().register(user_id, data)
         logging.info(response)
         return response, 200

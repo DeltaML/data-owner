@@ -1,5 +1,4 @@
 import logging
-import uuid
 
 from commons.data.data_loader import DataLoader
 from commons.decorators.decorators import data_owner_computation
@@ -28,7 +27,6 @@ class DataOwnerService(metaclass=Singleton):
         :param data_loader:
         :param encryption_service:
         """
-        self.client_id = str(uuid.uuid1())
         self.config = config
         self.encryption_service = encryption_service
         self.federated_aggregator_connector = FederatedAggregatorConnector(self.config)
@@ -59,12 +57,14 @@ class DataOwnerService(metaclass=Singleton):
         self.update_stored_model(model_orm, model, public_key)
         return gradient
 
-    def register(self):
+    def register(self, user):
         """
         Register client into federated server
         :return:
         """
-        result = self.federated_aggregator_connector.register(self.get_id())
+        self.client_id = user.delta_id
+        result = self.federated_aggregator_connector.register(user)
+
         logging.info("DataOwner registration status:" + str(result))
 
     def get_id(self):

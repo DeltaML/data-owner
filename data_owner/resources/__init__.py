@@ -2,7 +2,7 @@ import logging
 from flask import jsonify, make_response, abort
 from flask_restplus import Api
 
-from data_owner.exceptions.exceptions import NoResultFoundException, LoginFailureException
+from data_owner.exceptions.exceptions import NoResultFoundException, LoginFailureException, AddressNotFoundException
 from data_owner.resources.trainings_resource import api as trainings_api
 from data_owner.resources.datasets_resource import api as datasets_api
 from data_owner.resources.models_resource import api as models_api
@@ -44,8 +44,8 @@ def not_found_error_handler(error):
     return _handle_error(error)
 
 
-@api.errorhandler(NoResultFoundException)
-def dataset_not_found_error_handler(error):
+@api.errorhandler(AddressNotFoundException)
+def address_not_found_error_handler(error):
     """
     Default error handler
     :param error:
@@ -53,6 +53,7 @@ def dataset_not_found_error_handler(error):
     """
     logging.error(error)
     return _handle_error(error)
+
 
 
 @api.errorhandler(Exception)
