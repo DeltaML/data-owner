@@ -49,13 +49,15 @@ class UserService(metaclass=Singleton):
         if not UserLoginService.validate(user_info):
             raise LoginFailureException()
 
+        # Validate external email
+        if not user_info["email_verified"]:
+            raise LoginFailureException()
+
         user_external_id = user_info['sub']
         user = User.find_one_by_external_id(user_external_id)
         if not user:
             user = self.create_user(token, user_external_id, user_info)
 
-        if not user_info["email_verified"]:
-            raise LoginFailureException()
 
         try:
             self._register(user)
