@@ -9,11 +9,12 @@ RUN pip install  --user -r requirements.txt
 FROM nikolaik/python-nodejs AS release
 WORKDIR /app
 
-RUN npm install -g node-fetch express express-fileupload express-form-data multer body-parser form-data
 COPY --from=build /root/.local /root/.local
 
 ADD /data_owner /app/data_owner
 ADD /node-server /app/node-server
+COPY /node-server/package.json .
+RUN npm install
 ADD /scripts /app
 
 RUN mkdir -p /app/db
