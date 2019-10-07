@@ -30,8 +30,6 @@ class DataOwnerService(metaclass=Singleton):
         self.config = config
         self.encryption_service = encryption_service
         self.federated_aggregator_connector = FederatedAggregatorConnector(self.config)
-        if config['REGISTRATION_ENABLE']:
-            self.register()
 
     def update_stored_model(self, model_orm, model, public_key):
         model_orm.set_weights(serialize(model.weights, self.encryption_service, public_key))

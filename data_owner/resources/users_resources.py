@@ -56,8 +56,9 @@ class UserResources(Resource):
     @api.marshal_with(user_basic_data, code=201)
     @api.doc('Create new user')
     def post(self):
-        logging.info("Creating new user")
         data = request.get_json()
+        logging.info("Creating new user {}".format(data))
+
         return UserService().create(data), 201
 
     @api.marshal_list_with(user_data)
@@ -111,8 +112,8 @@ class UserLoginResources(Resource):
     @api.marshal_with(user_basic_data, code=201)
     @api.doc('Register user in federated aggregator')
     def post(self, user_id):
-        logging.info("Register user")
         data = request.get_json()
+        logging.info("Register user with data {}".format(data))
         response = UserService().register(user_id, data)
         logging.info(response)
         return response, 200
