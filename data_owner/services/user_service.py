@@ -58,7 +58,6 @@ class UserService(metaclass=Singleton):
         if not user:
             user = self.create_user(token, user_external_id, user_info)
 
-
         try:
             self._register(user)
         except AddressNotFoundException:
