@@ -106,7 +106,7 @@ class UserLoginResources(Resource):
 
 
 @api.route('/<user_id>/register', endpoint='users_register_resources_ep')
-class UserLoginResources(Resource):
+class UserAddressResources(Resource):
 
     @api.expect(user_register_req)
     @api.marshal_with(user_basic_data, code=201)
