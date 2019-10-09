@@ -92,8 +92,8 @@ class DataOwnerService(metaclass=Singleton):
         """
         data_owner = DataOwner()
         logging.info("Getting metrics, data owner: {}".format(self.client_id))
-        X_test, y_test = DataLoader().get_sub_set()
-        model_orm = Model.get(model_id) or ModelFactory.get_model(model_type)()
+        model_orm = Model.get(model_id)
+        X_test, y_test = model_orm.get_dataset()
         model_orm.set_weights(weights)
         diffs = data_owner.model_quality_metrics(model_orm.model, X_test, y_test)
         return diffs
