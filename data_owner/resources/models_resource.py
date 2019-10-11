@@ -63,7 +63,7 @@ class ModelsResources(Resource):
     @api.marshal_list_with(model_reduced_response)
     def get(self):
         parser = reqparse.RequestParser()
-        parser.add_argument('status', type=str, help='Status cannot be converted')
+        parser.add_argument('status', type=str, required=False, help='Status cannot be converted', location='args')
         args = parser.parse_args()
         return ModelService.get_all(args)
 
