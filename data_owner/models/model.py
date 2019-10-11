@@ -108,6 +108,9 @@ class BaseModel(DbEntity):
         self.mse = prediction.mse
         return prediction
 
+    def get_dataset(self):
+        return self.model.X, self.model.y
+
     @classmethod
     def get(cls, model_id=None):
         filters = {'id': model_id} if model_id else None
