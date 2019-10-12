@@ -43,7 +43,7 @@ update = api.model(name='Update', model={
 link = api.model(name='Link', model={
     'model_id': fields.String(required=True, description='The model identifier'),
     'data_owner_id': fields.String(required=True, description='The model identifier'),
-    'has_dataset': fields.Boolean(required=True, description='The model weights')
+    'linked': fields.Boolean(required=True, description='The model weights')
 })
 
 metric = api.model(name='Metric', model={
@@ -82,21 +82,22 @@ data_owner = DataOwnerService()
 @api.route('', endpoint='training_resources_ep')
 class TrainingResources(Resource):
 
-    @api.doc('Initialize new model with existing dataset')
+    @api.doc('Save new training request')
     @api.expect(data_metadata)
-    @api.marshal_with(link, code=201)
     def post(self):
         data = request.get_json()
         training_id = data['model_id']
         reqs = data['requirements']
-        # TODO: For now i'm creating the training and linking the dataset to the training all at once
-        # TODO: and doing it in the back, but a future change will be to do those in separate API calls.
-        model_id, do_id, has_dataset = data_owner.link_model_to_dataset(training_id, data['model_type'], reqs)
-        return {'model_id': model_id, 'data_owner_id': do_id, 'has_dataset': has_dataset}
+        data_owner.init_model(training_id, data['model_type'], reqs)
 
 
 @api.route('/<model_id>', endpoint='training_resource_ep')
 class TrainingResource(Resource):
+
+    @api.doc('Get if data owner is training the model')
+    @api.marshal_with(link, code=201)
+    def get(self, model_id):
+        return {'model_id': model_id, 'data_owner_id': data_owner.get_id(), 'linked': data_owner.model_is_linked(model_id)}
 
     @api.doc('Get gradient updated')
     @api.marshal_with(update, code=200)
@@ -136,3 +137,14 @@ class MetricsResource(Resource):
         data = request.get_json()
         data_owner.update_mse(model_id, data['mse'])
         return 200
+
+
+@api.route('/<model_id>/accept', endpoint='accept_training_resource_ep')
+class MetricsResource(Resource):
+
+    @api.doc('Initialize new model with existing dataset')
+    @api.marshal_with(link, code=200)
+    def put(self, model_id):
+        data = request.get_json()
+        model_id, do_id, has_dataset = data_owner.link_model_to_dataset(model_id)
+        return {'linked': has_dataset}

@@ -18,8 +18,8 @@ user_data = api.model(name='User', model={
     'external_id': fields.String(required=True, description='The user identifier'),
     'name': fields.String(required=True, description='The user name'),
     'email': fields.String(required=True, description='The user email'),
-    'token': fields.String(required=True, description='The user token'),
-    'models': fields.Nested(model, required=True, description='The user models')
+    'token': fields.String(required=True, description='The user token')#,
+    #'models': fields.Nested(model, required=True, description='The user models')
 })
 
 

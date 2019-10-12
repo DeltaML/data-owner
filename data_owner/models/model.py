@@ -26,10 +26,10 @@ class ModelColumn(types.UserDefinedType):
 
     def bind_processor(self, dialect):
         def process(value):
-            x = value.X.tolist() if value.X is not None else None
-            y = value.y.tolist() if value.y is not None else None
-            weights = value.weights if type(value.weights) == list else value.weights.tolist() if value and value.weights.any() else None
-            model_type = value.type
+            x = value.X.tolist() if value and value.X is not None else None
+            y = value.y.tolist() if value and value.y is not None else None
+            weights = value.weights if value and type(value.weights) == list else value.weights.tolist() if value and value.weights.any() else None
+            model_type = value.type if value else None
             return json.dumps({
                 'x': x, 'y': y, 'weights': weights, 'type': model_type
             })
@@ -56,7 +56,7 @@ class BaseModel(DbEntity):
     request_data = Column(JSON)
     mse = Column(Float)
     initial_mse = Column(Float)
-    status = Column(String(50), default=TrainingStatus.INITIATED.name)
+    status = Column(String(50), default=TrainingStatus.WAITING.name)
     improvement = Column(Float)
     name = Column(String(100))
     iterations = Column(Integer)
@@ -68,14 +68,15 @@ class BaseModel(DbEntity):
     user = relationship("User", back_populates="models")
     User.models = relationship("Model", back_populates="user")
 
-    def __init__(self, model_id, model_type, data, name="default"):
+    def __init__(self, model_id, model_type, reqs, name="default"):
         self.id = model_id
         self.model_type = model_type
-        _model = ModelFactory.get_model(model_type)(X=data[0], y=data[1])
+        _model = ModelFactory.get_model(self.model_type)(X=None, y=None, requirements=reqs)
         self.model = _model
         self.model.set_weights(_model.weights.tolist())
-        self.model.type = model_type
-        self.status = TrainingStatus.INITIATED.name
+        self.model.type = self.model_type
+        self.requirements = reqs
+        self.status = TrainingStatus.WAITING.name
         self.iterations = 0
         self.improvement = 0.0
         self.name = name
@@ -83,6 +84,12 @@ class BaseModel(DbEntity):
         self.mse = 0.0
         self.initial_mse = 0.0
         self.mse_history = []
+
+    def link_to_dataset(self, data):
+        _model = ModelFactory.get_model(self.model_type)(X=data[0], y=data[1])
+        self.model = _model
+        self.status = TrainingStatus.INITIATED.name
+        self.update()
 
     def set_weights(self, weights):
         if type(weights) == list:
@@ -124,6 +131,15 @@ class BaseModel(DbEntity):
     @classmethod
     def find_all(cls):
         return DbEntity.find(BaseModel)
+
+    @classmethod
+    def find_all_by(self, filters):
+        return DbEntity.find(BaseModel, filters)
+
+    @classmethod
+    def find_by_status(self, status):
+        filters = {'status': status}
+        return DbEntity.find(BaseModel, filters)
 
 
 class Model(BaseModel):
