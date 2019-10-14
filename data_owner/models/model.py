@@ -14,9 +14,10 @@ from data_owner.services.data_base import DbEntity
 
 class TrainingStatus(Enum):
     WAITING = 0
-    INITIATED = 1
-    IN_PROGRESS = 2
-    FINISHED = 3
+    READY = 1
+    INITIATED = 2
+    IN_PROGRESS = 3
+    FINISHED = 4
 
 
 class ModelColumn(types.UserDefinedType):

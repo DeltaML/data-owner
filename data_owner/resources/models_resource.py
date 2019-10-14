@@ -1,5 +1,5 @@
 from flask_restplus import Resource, Namespace, fields, reqparse
-from data_owner.models.model import TrainingStatus
+from data_owner.services.entities.model_response import ModelResponse
 from data_owner.services.model_service import ModelService
 
 api = Namespace('models', description='Model related operations')
@@ -41,6 +41,7 @@ model_detail = api.model(name='Model', model={
     'creation_date': fields.String(description='The model creation date'),
     'updated_date': fields.String(description='The model updated date'),
     'user_id': fields.String(required=True, description='The model user_id'),
+    'requirements': fields.String(required=True, description='The requirements on the data for training the model'),
     'name': fields.String(required=True, description='The model name')
 })
 
@@ -74,4 +75,4 @@ class ModelResources(Resource):
     @api.doc('Get trained model')
     @api.marshal_with(model_data)
     def get(self, model_id):
-        return ModelService.get(model_id)
+        return ModelResponse(ModelService.get(model_id))

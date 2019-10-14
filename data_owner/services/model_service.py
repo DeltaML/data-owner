@@ -1,4 +1,7 @@
 from data_owner.models.model import Model
+from data_owner.services.datasets_service import DatasetsService
+from data_owner.models.model import TrainingStatus
+
 
 class ModelService:
 
@@ -9,4 +12,9 @@ class ModelService:
 
     @classmethod
     def get(cls, model_id):
-        return Model.get(model_id)
+        model = Model.get(model_id)
+        dataset = DatasetsService().get_dataset_for_training(model.requirements)
+        if dataset:
+            model.status = TrainingStatus.READY.name
+        model.update()
+        return model
