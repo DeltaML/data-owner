@@ -10,4 +10,4 @@ scikit-learn==0.21.2
 pandas==0.24.2
 pylint==2.3.1
 google-auth==1.6.3
-DeltaML-commons==0.10.1
+DeltaML-commons==0.10.17

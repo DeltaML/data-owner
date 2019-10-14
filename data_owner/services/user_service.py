@@ -71,7 +71,7 @@ class UserService(metaclass=Singleton):
                     email=user_info["email"],
                     token=token)
         user.save()
-        return user
+        return User.find_one_by_external_id(user_external_id)
 
     def register(self, user_id, user_data):
         """

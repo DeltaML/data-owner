@@ -44,8 +44,8 @@ user_basic_data = api.model(name='UserReducedResponse', model={
     'delta_id': fields.String(required=True, description='Delta id. From delta ml context'),
     'name': fields.String(required=True, description='The user name'),
     'email': fields.String(required=True, description='The user email'),
-    'token': fields.String(required=True, description='The user token'),
-    'address': fields.String(required=True, description='The user ethereum address')
+    'token': fields.String(required=True, description='The user token')#,
+    #'address': fields.String(required=True, description='The user ethereum address')
 })
 
 

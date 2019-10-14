@@ -6,7 +6,7 @@ from commons.model.model_service import ModelFactory
 from commons.utils.singleton import Singleton
 from commons.operations_utils.functions import deserialize, serialize
 from data_owner.domain.data_owner import DataOwner
-from data_owner.models.model import Model
+from data_owner.models.model import Model, TrainingStatus
 from data_owner.services.datasets_service import DatasetsService
 from data_owner.services.federated_aggregator_connector import FederatedAggregatorConnector
 
@@ -90,8 +90,8 @@ class DataOwnerService(metaclass=Singleton):
         """
         data_owner = DataOwner()
         logging.info("Getting metrics, data owner: {}".format(self.client_id))
-        X_test, y_test = DataLoader().get_sub_set()
-        model_orm = Model.get(model_id) or ModelFactory.get_model(model_type)()
+        model_orm = Model.get(model_id)
+        X_test, y_test = model_orm.get_dataset()
         model_orm.set_weights(weights)
         diffs = data_owner.model_quality_metrics(model_orm.model, X_test, y_test)
         return diffs
@@ -108,11 +108,21 @@ class DataOwnerService(metaclass=Singleton):
         model_orm.update()
         logging.info("Calculated mse: {}".format(mse))
 
-    def link_model_to_dataset(self, model_id, model_type, reqs):
+    def link_model_to_dataset(self, model_id):
         has_dataset = False
-        dataset = DatasetsService().get_dataset_for_training(reqs)
+        model = Model.get(model_id)
+        dataset = DatasetsService().get_dataset_for_training(model.requirements)
         if not dataset:
             return model_id, self.get_id(), has_dataset
-        model = Model(model_id, model_type, dataset)
-        model.save()
+        model.link_to_dataset(dataset)
+        model.update()
+        self.federated_aggregator_connector.accept_model_training(self.get_id(), model_id)
         return model_id, self.get_id(), not has_dataset
+
+    def model_is_linked(self, model_id):
+        return Model.get(model_id).status != TrainingStatus.WAITING
+
+    def init_model(self, model_id, model_type, reqs):
+        model = Model(model_id, model_type, reqs)
+        model.save()
+        return model_id, self.get_id()
