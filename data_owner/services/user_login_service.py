@@ -15,7 +15,6 @@ class UserLoginService:
     def validate(idinfo):
         return idinfo['iss'] in ['accounts.google.com', 'https://accounts.google.com']
 
-
     @staticmethod
     def get_user_info(token):
         idinfo = id_token.verify_oauth2_token(token, requests.Request(), UserLoginService.CLIENT_ID)

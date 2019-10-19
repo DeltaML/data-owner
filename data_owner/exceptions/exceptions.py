@@ -41,3 +41,19 @@ class InvalidFileException(Exception):
         super().__init__()
         # Now for your custom code...
         self.status_code = status_code
+
+
+class AddressNotFoundException(Exception):
+    def __init__(self, message, status_code=400):
+        # Call the base class constructor with the parameters it needs
+        super().__init__(message)
+        # Now for your custom code...
+        self.status_code = status_code
+
+
+class SaveEntityException(Exception):
+    def __init__(self, status_code=500):
+        # Call the base class constructor with the parameters it needs
+        super().__init__("Error saving entity into db")
+        # Now for your custom code...
+        self.status_code = status_code
