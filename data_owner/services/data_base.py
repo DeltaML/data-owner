@@ -1,6 +1,10 @@
+import logging
 from sqlalchemy import create_engine
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+
+from data_owner.exceptions.exceptions import SaveEntityException
 
 
 class Database:
@@ -37,14 +41,18 @@ class DbEntity(Database.base):
             session.commit()
 
     def save(self):
-        session = DbEntity.data_base.get_session()
-        current_db_sessions = session.object_session(self)
-        if current_db_sessions:
-            current_db_sessions.add(self)
-            current_db_sessions.commit()
-        else:
-            session.add(self)
-            session.commit()
+        try:
+            session = DbEntity.data_base.get_session()
+            current_db_sessions = session.object_session(self)
+            if current_db_sessions:
+                current_db_sessions.add(self)
+                current_db_sessions.commit()
+            else:
+                session.add(self)
+                session.commit()
+        except (Exception, IntegrityError) as e:
+            logging.error(e)
+            raise SaveEntityException()
 
     def update(self, entity, filters, update_data):
         session = DbEntity.data_base.get_session()

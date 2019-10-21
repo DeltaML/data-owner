@@ -9,15 +9,15 @@ class FederatedAggregatorConnector:
         self.federated_aggregator_host = config['FEDERATED_AGGREGATOR_HOST']
         self.async_thread_pool = AsyncThreadPoolExecutor()
 
-    def register(self, client_id):
+    def register(self, client):
         """
         Register client on federated server
-        :param client_id:
+        :param client:
         :return:
         """
         server_register_url = self.federated_aggregator_host + "/dataowner"
-        logging.info("Register client {} to server {}".format(client_id, server_register_url))
-        response = requests.post(server_register_url, json={'id': client_id})
+        logging.info("Register client {} to server {}".format(client.delta_id, server_register_url))
+        response = requests.post(server_register_url, json={'id': client.delta_id, 'address': client.address})
         response.raise_for_status()
         return response.status_code == requests.codes.ok
 
