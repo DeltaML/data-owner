@@ -14,7 +14,7 @@ class ModelService:
     def get(cls, model_id):
         model = Model.get(model_id)
         dataset = DatasetsService().get_dataset_for_training(model.requirements)
-        if dataset:
+        if dataset and model.status == TrainingStatus.WAITING.name:
             model.status = TrainingStatus.READY.name
         model.update()
         return model

@@ -34,11 +34,13 @@ var routes = {
     DATASETS: "/datasets",
     MODELS: "/models",
     MODEL: "/models/:id",
+    ACCEPT: "/trainings/:id/accept"
 };
 
 var httpMethods = {
     POST: "POST",
-    GET: "GET"
+    GET: "GET",
+    PUT: "PUT"
 };
 
 
@@ -78,6 +80,16 @@ app.get(routes.PING, async (req, res, next) => {
 app.post(routes.LOGIN, async (req, res) => {
     try {
         res.json(executeFetchJson(httpMethods.POST, routes.LOGIN, JSON.stringify(req.body)));
+    } catch (e) {
+        //this will eventually be handled by your error handling middleware
+        console.log(e)
+    }
+});
+
+app.put(routes.ACCEPT, async (req, res) => {
+    try {
+        const {id} = req.params;
+        res.json(executeFetchJson(httpMethods.PUT, "/trainings/"+id+"/accept", JSON.stringify(req.body)));
     } catch (e) {
         //this will eventually be handled by your error handling middleware
         console.log(e)
@@ -131,8 +143,9 @@ app.get(routes.MODELS, async (req, res) => {
 
 app.get(routes.MODEL, async (req, res) => {
     try {
+        const {id} = req.params;
         console.log(req.param("tagId"))
-        res.json(await executeFetchJson(httpMethods.GET, routes.MODEL));
+        res.json(await executeFetchJson(httpMethods.GET, "/models/"+id));
     } catch (e) {
         //this will eventually be handled by your error handling middleware
         console.log(e)
