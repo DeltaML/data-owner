@@ -11,6 +11,7 @@ class ModelResponse:
                       "creation_date": model.creation_date,
                       "updated_date": model.updated_date,
                       "user_id": model.user_id,
+                      "requirements": model.requirements,
                       "name": model.name}
 
         self.metrics = {"mse": model.mse,
