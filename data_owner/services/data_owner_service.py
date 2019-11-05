@@ -96,7 +96,7 @@ class DataOwnerService(metaclass=Singleton):
         diffs = data_owner.model_quality_metrics(model_orm.model, X_test, y_test)
         return diffs
 
-    def update_mse(self, model_id, mse):
+    def update_mse(self, model_id, mse, role):
         """
         Method used only by validator role. It doesn't use the model built from the data. It gets the model from
         the federated trainer and use the local data to calculate quality metrics
@@ -105,6 +105,11 @@ class DataOwnerService(metaclass=Singleton):
         logging.info("Getting metrics, data owner: {}".format(self.client_id))
         model_orm = Model.get(model_id)
         model_orm.add_mse(mse)
+        if model_orm.initial_mse == 0.0:
+            model_orm.initial_mse = mse
+        model_orm.improvement = max([(model_orm.initial_mse - mse) / model_orm.initial_mse, 0])
+        model_orm.iterations += 1
+        model_orm.role = role
         model_orm.update()
         logging.info("Calculated mse: {}".format(mse))
 
@@ -126,3 +131,16 @@ class DataOwnerService(metaclass=Singleton):
         model = Model(model_id, model_type, reqs)
         model.save()
         return model_id, self.get_id()
+
+    def finish_training(self, model_id, contrib):
+        model = Model.get(model_id)
+        model.status = TrainingStatus.FINISHED
+        model.earned = self._calculate_earnings(model, contrib)
+        model.update()
+
+    def _calculate_earnings(self, model, contrib):
+        if model.role == 'trainer':
+            trainers_pay = 5 * model.improvement * 0.7
+            return round(trainers_pay * contrib, 3)
+        else:
+            return round(5 * 0.2, 3)
