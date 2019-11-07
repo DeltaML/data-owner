@@ -13,6 +13,7 @@ COPY --from=build /root/.local /root/.local
 
 ADD /data_owner /app/data_owner
 ADD /node-server /app/node-server
+ADD /node-server/static /app/node-server/static/
 COPY /node-server/package.json .
 RUN npm install
 ADD /scripts /app
