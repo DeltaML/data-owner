@@ -126,7 +126,9 @@ class TrainingResource(Resource):
     def patch(self, model_id):
         data = request.get_json()
         logging.info("Finishing training in data owner")
-        data_owner.finish_training(model_id, data[data_owner.get_id()])
+        contribs = data['contribs']['contributions']
+        improvement = data['contribs']['improvement']
+        data_owner.finish_training(model_id, contribs, improvement)
         return 200
 
 

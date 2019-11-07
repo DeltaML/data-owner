@@ -125,22 +125,23 @@ class DataOwnerService(metaclass=Singleton):
         return model_id, self.get_id(), not has_dataset
 
     def model_is_linked(self, model_id):
-        return Model.get(model_id).status != TrainingStatus.WAITING
+        return Model.get(model_id).status != TrainingStatus.WAITING.name
 
     def init_model(self, model_id, model_type, reqs):
         model = Model(model_id, model_type, reqs)
         model.save()
         return model_id, self.get_id()
 
-    def finish_training(self, model_id, contrib):
+    def finish_training(self, model_id, contribs, improvement):
         model = Model.get(model_id)
-        model.status = TrainingStatus.FINISHED
-        model.earned = self._calculate_earnings(model, contrib)
+        model.status = TrainingStatus.FINISHED.name
+        model.improvement = improvement
+        model.earned = self._calculate_earnings(model, contribs)
         model.update()
 
-    def _calculate_earnings(self, model, contrib):
-        if model.role == 'trainer':
+    def _calculate_earnings(self, model, contribs):
+        if self.get_id() in contribs:
             trainers_pay = 5 * model.improvement * 0.7
-            return round(trainers_pay * contrib, 3)
+            return round(trainers_pay * contribs[self.get_id()], 3)
         else:
             return round(5 * 0.2, 3)

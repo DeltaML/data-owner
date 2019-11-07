@@ -30,7 +30,8 @@ metrics_detail = api.model(name='Metrics', model={
     'mse': fields.Float(required=True, description='The MSE of the model'),
     'iterations': fields.Integer(required=True, description='Number of iterations'),
     'improvement': fields.Fixed(required=True, decimals=5, description='The model improvement'),
-    'mse_history': fields.List(fields.Nested(mse_history), required=True, description='The model mse history list')
+    'mse_history': fields.List(fields.Nested(mse_history), required=True, description='The model mse history list'),
+    'earned': fields.Fixed(required=True, decimals=2, description='Amount earned while training')
 })
 
 

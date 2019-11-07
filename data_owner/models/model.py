@@ -62,6 +62,7 @@ class BaseModel(DbEntity):
     name = Column(String(100))
     iterations = Column(Integer)
     earned = Column(Float)
+    role = Column(String)
     mse_history = Column(JSON)
     creation_date = Column(DateTime, nullable=False, default=datetime.utcnow)
     updated_date = Column(DateTime, nullable=False, default=datetime.utcnow)
