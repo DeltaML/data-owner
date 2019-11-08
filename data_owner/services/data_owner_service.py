@@ -140,8 +140,11 @@ class DataOwnerService(metaclass=Singleton):
         model.update()
 
     def _calculate_earnings(self, model, contribs):
+        proportion_for_trainers = 0.7
+        proportion_for_validators = 0.2
+        intial_payment_for_linear_regression = 5  # TODO: This has to be refactored later
         if self.get_id() in contribs:
-            trainers_pay = 5 * model.improvement * 0.7
+            trainers_pay = intial_payment_for_linear_regression * model.improvement * proportion_for_trainers
             return round(trainers_pay * contribs[self.get_id()], 3)
         else:
-            return round(5 * 0.2, 3)
+            return round(intial_payment_for_linear_regression * proportion_for_validators, 3)
