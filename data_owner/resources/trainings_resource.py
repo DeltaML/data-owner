@@ -122,6 +122,15 @@ class TrainingResource(Resource):
         data_owner.step(model_id, data['gradient'], data['public_key'])
         return 200
 
+    @api.doc('Finishes the local training or validation')
+    def patch(self, model_id):
+        data = request.get_json()
+        logging.info("Finishing training in data owner")
+        contribs = data['contribs']['contributions']
+        improvement = data['contribs']['improvement']
+        data_owner.finish_training(model_id, contribs, improvement)
+        return 200
+
 
 @api.route('/<model_id>/metrics', endpoint='metrics_resource_ep')
 class MetricsResource(Resource):
@@ -135,7 +144,7 @@ class MetricsResource(Resource):
 
     def put(self, model_id):
         data = request.get_json()
-        data_owner.update_mse(model_id, data['mse'])
+        data_owner.update_mse(model_id, data['mse'], data['role'])
         return 200
 
 

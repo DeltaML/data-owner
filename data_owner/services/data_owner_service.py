@@ -96,7 +96,7 @@ class DataOwnerService(metaclass=Singleton):
         diffs = data_owner.model_quality_metrics(model_orm.model, X_test, y_test)
         return diffs
 
-    def update_mse(self, model_id, mse):
+    def update_mse(self, model_id, mse, role):
         """
         Method used only by validator role. It doesn't use the model built from the data. It gets the model from
         the federated trainer and use the local data to calculate quality metrics
@@ -105,6 +105,11 @@ class DataOwnerService(metaclass=Singleton):
         logging.info("Getting metrics, data owner: {}".format(self.client_id))
         model_orm = Model.get(model_id)
         model_orm.add_mse(mse)
+        if model_orm.initial_mse == 0.0:
+            model_orm.initial_mse = mse
+        model_orm.improvement = max([(model_orm.initial_mse - mse) / model_orm.initial_mse, 0])
+        model_orm.iterations += 1
+        model_orm.role = role
         model_orm.update()
         logging.info("Calculated mse: {}".format(mse))
 
@@ -120,9 +125,26 @@ class DataOwnerService(metaclass=Singleton):
         return model_id, self.get_id(), not has_dataset
 
     def model_is_linked(self, model_id):
-        return Model.get(model_id).status != TrainingStatus.WAITING
+        return Model.get(model_id).status != TrainingStatus.WAITING.name
 
     def init_model(self, model_id, model_type, reqs):
         model = Model(model_id, model_type, reqs)
         model.save()
         return model_id, self.get_id()
+
+    def finish_training(self, model_id, contribs, improvement):
+        model = Model.get(model_id)
+        model.status = TrainingStatus.FINISHED.name
+        model.improvement = improvement
+        model.earned = self._calculate_earnings(model, contribs)
+        model.update()
+
+    def _calculate_earnings(self, model, contribs):
+        proportion_for_trainers = 0.7
+        proportion_for_validators = 0.2
+        intial_payment_for_linear_regression = 5  # TODO: This has to be refactored later
+        if self.get_id() in contribs:
+            trainers_pay = intial_payment_for_linear_regression * model.improvement * proportion_for_trainers
+            return round(trainers_pay * contribs[self.get_id()], 3)
+        else:
+            return round(intial_payment_for_linear_regression * proportion_for_validators, 3)

@@ -13,7 +13,8 @@ model_reduced_response = api.model(name='Models', model={
     'iterations': fields.Integer(required=True, description='Number of iterations'),
     'mse': fields.Float(required=True, description='The model mse'),
     'user_id': fields.String(required=True, description='The model user_id'),
-    'creation_date': fields.String(description='The model creation date')
+    'creation_date': fields.String(description='The model creation date'),
+    'earned': fields.Fixed(required=True, description='The earnings for training model')
 })
 
 
@@ -29,7 +30,8 @@ metrics_detail = api.model(name='Metrics', model={
     'mse': fields.Float(required=True, description='The MSE of the model'),
     'iterations': fields.Integer(required=True, description='Number of iterations'),
     'improvement': fields.Fixed(required=True, decimals=5, description='The model improvement'),
-    'mse_history': fields.List(fields.Nested(mse_history), required=True, description='The model mse history list')
+    'mse_history': fields.List(fields.Nested(mse_history), required=True, description='The model mse history list'),
+    'earned': fields.Fixed(required=True, decimals=2, description='Amount earned while training')
 })
 
 
