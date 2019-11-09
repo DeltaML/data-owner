@@ -107,6 +107,7 @@ class DataOwnerService(metaclass=Singleton):
         model_orm.add_mse(mse)
         if model_orm.initial_mse == 0.0:
             model_orm.initial_mse = mse
+            model_orm.status = TrainingStatus.IN_PROGRESS.name
         model_orm.improvement = max([(model_orm.initial_mse - mse) / model_orm.initial_mse, 0])
         model_orm.iterations += 1
         model_orm.role = role

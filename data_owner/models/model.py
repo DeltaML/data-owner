@@ -124,7 +124,7 @@ class BaseModel(DbEntity):
         update_data = {BaseModel.model: self.model, BaseModel.status: self.status, BaseModel.iterations: self.iterations,
                        BaseModel.improvement: self.improvement, BaseModel.name: self.name,
                        BaseModel.mse_history: self.mse_history, BaseModel.initial_mse: self.initial_mse,
-                       BaseModel.updated_date: self.updated_date, BaseModel.mse: self.mse}
+                       BaseModel.updated_date: self.updated_date, BaseModel.mse: self.mse, BaseModel.earned: self.earned}
         super(BaseModel, self).update(BaseModel, filters, update_data)
 
     def add_mse(self, mse):
