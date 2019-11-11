@@ -23,7 +23,7 @@ class FederatedAggregatorConnector:
 
     def accept_model_training(self, client_id, model_id):
         server_register_url = self.federated_aggregator_host + "/model/" + model_id + "/accept"
-        logging.info("Register client {} to server {}".format(client_id, server_register_url))
+        logging.info("client {} accept model_id {} to server {}".format(client_id, model_id, server_register_url))
         args = [{'url': server_register_url, 'payload': {'data_owner_id': client_id, 'model_id': model_id}}]
         self.async_thread_pool.run(executable=self.send_accept_request, args=args)
 
